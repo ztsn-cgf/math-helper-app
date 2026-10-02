@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,3 +37,8 @@ jobs:
         with:
           name: math-helper-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create v0.2.0 app/build/outputs/apk/debug/*.apk --repo "${{ github.repository }}" --title "数学助手 v0.2.0 测试版" --notes "修复拍照闪退；新增学生「自己学」按知识点学习" || echo "tag 已存在，跳过发布"
