@@ -45,6 +45,22 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var downloading by remember { mutableStateOf(false) }
+    var checking by remember { mutableStateOf(false) }
+    var updateMsg by remember { mutableStateOf<String?>(null) }
+
+    fun checkUpdate() {
+        scope.launch {
+            checking = true
+            updateMsg = null
+            val info = UpdateChecker.latest()
+            when {
+                info == null -> updateMsg = "检查失败，请确认网络后重试"
+                UpdateChecker.isNewer(info.version, UpdateChecker.currentVersion(context)) -> updateInfo = info
+                else -> updateMsg = "已是最新版本 v${UpdateChecker.currentVersion(context)}"
+            }
+            checking = false
+        }
+    }
 
     LaunchedEffect(Unit) {
         val info = UpdateChecker.latest()
@@ -74,6 +90,16 @@ fun HomeScreen(
                 ModeButton("学生模式", onClick = onStudent)
                 TextButton(onClick = onKnowledgeTree) {
                     Text("查看知识点树")
+                }
+                TextButton(onClick = { checkUpdate() }, enabled = !checking) {
+                    Text(if (checking) "检查中…" else "检查更新")
+                }
+                updateMsg?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

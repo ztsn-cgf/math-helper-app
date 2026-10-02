@@ -41,4 +41,4 @@ jobs:
       - name: Publish Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create v0.5.0 app/build/outputs/apk/debug/*.apk --repo "${{ github.repository }}" --title "数学助手 v0.5.0 测试版" --notes "新增 App 内自动检查更新；自己学一键出题；图形运动动画演示" || echo "tag 已存在，跳过发布"
+        run: gh release create v0.5.1 app/build/outputs/apk/debug/*.apk --repo "${{ github.repository }}" --title "数学助手 v0.5.1 测试版" --notes "修复：答题空输入/乱输入误判为对；首页新增「检查更新」按钮" || echo "tag 已存在，跳过发布"

@@ -150,9 +150,19 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
     private fun isCorrect(expected: String, actual: String): Boolean {
         val e = expected.trim().replace(" ", "")
         val a = actual.trim().replace(" ", "")
-        if (e.isEmpty()) return false
-        return e.equals(a, ignoreCase = true) || a.contains(e) || e.contains(a)
+        if (e.isEmpty() || a.isEmpty()) return false
+        // 完全一致（忽略大小写、空格）
+        if (e.equals(a, ignoreCase = true)) return true
+        // 数值比对：答案常是「数字 + 单位」形式（如 35 厘米），允许漏写单位；
+        // 双方提取到的数值序列必须完全一致，避免空串/乱填被误判为对。
+        val en = numbers(e)
+        val an = numbers(a)
+        return en.isNotEmpty() && en.size == an.size &&
+            en.zip(an).all { (x, y) -> kotlin.math.abs(x - y) < 1e-6 }
     }
+
+    private fun numbers(s: String): List<Double> =
+        Regex("""-?\d+(?:\.\d+)?""").findAll(s).mapNotNull { it.value.toDoubleOrNull() }.toList()
 }
 
 class LearnViewModelFactory(
