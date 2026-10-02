@@ -13,12 +13,23 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.mathhelper.app.update.UpdateChecker
+import com.mathhelper.app.update.UpdateInfo
+import kotlinx.coroutines.launch
 
 /**
  * 首页：家长 / 学生 模式选择。
@@ -30,6 +41,18 @@ fun HomeScreen(
     onStudent: () -> Unit,
     onKnowledgeTree: () -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+    var downloading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val info = UpdateChecker.latest()
+        if (info != null && UpdateChecker.isNewer(info.version, UpdateChecker.currentVersion(context))) {
+            updateInfo = info
+        }
+    }
+
     Scaffold(
         topBar = { CenterAlignedTopAppBar(title = { Text("数学助手") }) }
     ) { padding ->
@@ -54,6 +77,32 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    updateInfo?.let { info ->
+        AlertDialog(
+            onDismissRequest = { updateInfo = null },
+            title = { Text("发现新版本 ${info.version}") },
+            text = { Text(if (downloading) "正在下载…" else "是否下载并更新到最新版？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            downloading = true
+                            val file = UpdateChecker.downloadApk(context, info.downloadUrl)
+                            if (file != null) {
+                                UpdateChecker.installApk(context, file)
+                            }
+                            downloading = false
+                        }
+                    },
+                    enabled = !downloading
+                ) { Text(if (downloading) "下载中…" else "更新") }
+            },
+            dismissButton = {
+                TextButton(onClick = { updateInfo = null }) { Text("以后再说") }
+            }
+        )
     }
 }
 
