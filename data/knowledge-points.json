@@ -1,0 +1,220 @@
+{
+  "schema": "knowledge-points/v1",
+  "version": "domain-based-v1",
+  "description": "北师大版三年级数学知识点树（按领域组织，版本无关）。教材单元序号待确认 2012 版/2024 新版后补映射。gradeNote 标注学段。",
+  "domains": [
+    {
+      "id": "domain.measure",
+      "name": "测量·量感",
+      "description": "产品价值核心：长度/质量/时间/面积的量感与单位。",
+      "areas": [
+        {
+          "id": "area.len",
+          "name": "长度单位",
+          "gradeNote": "二年级遗留，三年级持续强化",
+          "tags": ["量感", "参照物"],
+          "topics": [
+            { "id": "kp.len.units", "name": "认识长度单位 mm/cm/dm/m/km", "tags": ["量感"] },
+            { "id": "kp.len.rate", "name": "长度单位进率与换算", "tags": ["换算"] },
+            { "id": "kp.len.estimate", "name": "用参照物估测长度", "tags": ["估测"] },
+            { "id": "kp.len.choose", "name": "选择合适的长度单位", "tags": ["单位选择"] }
+          ]
+        },
+        {
+          "id": "area.mass",
+          "name": "质量单位",
+          "gradeNote": "三年级下册",
+          "tags": ["量感", "参照物"],
+          "topics": [
+            { "id": "kp.mass.units", "name": "认识克/千克/吨", "tags": ["量感"] },
+            { "id": "kp.mass.rate", "name": "质量单位进率与换算", "tags": ["换算"] },
+            { "id": "kp.mass.estimate", "name": "用参照物估测质量", "tags": ["估测"] },
+            { "id": "kp.mass.choose", "name": "选择合适的质量单位", "tags": ["单位选择"] }
+          ]
+        },
+        {
+          "id": "area.time",
+          "name": "时间单位",
+          "gradeNote": "二年级（时分秒）+ 三年级上册（年月日）",
+          "tags": ["量感", "时间"],
+          "topics": [
+            { "id": "kp.time.hms", "name": "认识时/分/秒", "tags": ["量感"] },
+            { "id": "kp.time.ymd", "name": "年/月/日（大小月、平年闰年）", "tags": ["量感"] },
+            { "id": "kp.time.24h", "name": "24 时计时法", "tags": ["换算"] },
+            { "id": "kp.time.elapsed", "name": "时间换算与经过时间", "tags": ["换算"] }
+          ]
+        },
+        {
+          "id": "area.perimeter",
+          "name": "周长",
+          "gradeNote": "三年级上册",
+          "tags": ["几何", "量感"],
+          "topics": [
+            { "id": "kp.peri.concept", "name": "认识周长", "tags": ["概念"] },
+            { "id": "kp.peri.rect", "name": "长方形、正方形周长", "tags": ["公式"] }
+          ]
+        },
+        {
+          "id": "area.area",
+          "name": "面积",
+          "gradeNote": "三年级下册",
+          "tags": ["几何", "量感"],
+          "topics": [
+            { "id": "kp.area.units", "name": "认识面积与面积单位 cm²/dm²/m²", "tags": ["量感"] },
+            { "id": "kp.area.rate", "name": "面积单位进率", "tags": ["换算"] },
+            { "id": "kp.area.rect", "name": "长方形、正方形面积", "tags": ["公式"] },
+            { "id": "kp.area.estimate", "name": "估测面积", "tags": ["估测"] }
+          ]
+        },
+        {
+          "id": "area.pa",
+          "name": "周长与面积区分",
+          "gradeNote": "三年级下册（跨概念难点）",
+          "tags": ["概念区分"],
+          "topics": [
+            { "id": "kp.pa.lineface", "name": "周长是「线」、面积是「面」", "tags": ["概念区分"] },
+            { "id": "kp.pa.unit", "name": "单位名称区分（厘米 vs 平方厘米）", "tags": ["单位选择"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domain.geometry",
+      "name": "图形与几何·空间想象",
+      "description": "空间想象弱的核心：三视图、图形运动、展开图折叠。讲解优先交互演示（interactive）。",
+      "areas": [
+        {
+          "id": "area.views",
+          "name": "观察物体（三视图）",
+          "gradeNote": "三年级上册",
+          "tags": ["空间想象"],
+          "topics": [
+            { "id": "kp.views.dir", "name": "从不同方向观察物体", "tags": ["空间想象"] },
+            { "id": "kp.views.cube", "name": "从三个方向看小正方体搭成的立体", "tags": ["三视图"] }
+          ]
+        },
+        {
+          "id": "area.motion",
+          "name": "图形的运动",
+          "gradeNote": "三年级下册",
+          "tags": ["空间想象"],
+          "topics": [
+            { "id": "kp.motion.sym", "name": "轴对称", "tags": ["空间想象"] },
+            { "id": "kp.motion.trans", "name": "平移", "tags": ["空间想象"] },
+            { "id": "kp.motion.rotate", "name": "旋转", "tags": ["空间想象"] }
+          ]
+        },
+        {
+          "id": "area.unfold",
+          "name": "展开图与折叠",
+          "gradeNote": "空间想象延伸（辅助）",
+          "tags": ["空间想象"],
+          "topics": [
+            { "id": "kp.unfold.net", "name": "立体图形展开图", "tags": ["空间想象"] },
+            { "id": "kp.unfold.fold", "name": "平面图形折叠成体", "tags": ["空间想象"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domain.number",
+      "name": "数与代数",
+      "description": "运算能力：混合运算、加与减、乘与除、乘法、除法、小数、分数。",
+      "areas": [
+        {
+          "id": "area.mixed",
+          "name": "混合运算",
+          "gradeNote": "三年级上册",
+          "tags": ["运算"],
+          "topics": [
+            { "id": "kp.mixed.muladd", "name": "乘加、乘减混合运算", "tags": ["运算"] },
+            { "id": "kp.mixed.divadd", "name": "除加、除减混合运算", "tags": ["运算"] },
+            { "id": "kp.mixed.paren", "name": "带小括号的两步运算", "tags": ["运算"] },
+            { "id": "kp.mixed.order", "name": "运算顺序（先乘除后加减）", "tags": ["运算"] }
+          ]
+        },
+        {
+          "id": "area.addsub",
+          "name": "加与减",
+          "gradeNote": "三年级上册",
+          "tags": ["运算"],
+          "topics": [
+            { "id": "kp.addsub.3digit", "name": "三位数加减法", "tags": ["运算"] },
+            { "id": "kp.addsub.odo", "name": "里程表问题", "tags": ["应用"] }
+          ]
+        },
+        {
+          "id": "area.multdiv",
+          "name": "乘与除（口算）",
+          "gradeNote": "三年级上册",
+          "tags": ["运算"],
+          "topics": [
+            { "id": "kp.multdiv.round", "name": "整十、整百数乘除一位数口算", "tags": ["口算"] },
+            { "id": "kp.multdiv.2x1", "name": "两位数乘一位数", "tags": ["运算"] }
+          ]
+        },
+        {
+          "id": "area.multiply",
+          "name": "乘法",
+          "gradeNote": "三年级上（两三位数乘一位数）+ 下（两位数乘两位数）",
+          "tags": ["运算"],
+          "topics": [
+            { "id": "kp.multiply.2x1", "name": "两、三位数乘一位数（含进位）", "tags": ["运算"] },
+            { "id": "kp.multiply.zero", "name": "0 的乘法", "tags": ["0的运算"] },
+            { "id": "kp.multiply.2x2", "name": "两位数乘两位数", "tags": ["运算"] },
+            { "id": "kp.multiply.chain", "name": "连乘", "tags": ["运算"] }
+          ]
+        },
+        {
+          "id": "area.divide",
+          "name": "除法",
+          "gradeNote": "三年级下册",
+          "tags": ["运算"],
+          "topics": [
+            { "id": "kp.divide.2x1", "name": "两、三位数除以一位数", "tags": ["运算"] },
+            { "id": "kp.divide.mid0", "name": "商中间/末尾有 0", "tags": ["运算"] },
+            { "id": "kp.divide.zero", "name": "0 的除法", "tags": ["0的运算"] },
+            { "id": "kp.divide.check", "name": "除法验算", "tags": ["验算"] }
+          ]
+        },
+        {
+          "id": "area.decimal",
+          "name": "认识小数",
+          "gradeNote": "三年级上册",
+          "tags": ["数概念"],
+          "topics": [
+            { "id": "kp.decimal.read", "name": "小数的初步认识与读写", "tags": ["数概念"] },
+            { "id": "kp.decimal.compare", "name": "小数大小比较", "tags": ["数概念"] }
+          ]
+        },
+        {
+          "id": "area.fraction",
+          "name": "认识分数",
+          "gradeNote": "三年级下册",
+          "tags": ["数概念"],
+          "topics": [
+            { "id": "kp.fraction.read", "name": "分数的初步认识", "tags": ["数概念"] },
+            { "id": "kp.fraction.compare", "name": "分数大小比较", "tags": ["数概念"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domain.statistics",
+      "name": "统计与概率",
+      "description": "数据意识：收集、整理、表示数据。",
+      "areas": [
+        {
+          "id": "area.data",
+          "name": "数据的整理和表示",
+          "gradeNote": "三年级下册",
+          "tags": ["数据"],
+          "topics": [
+            { "id": "kp.data.collect", "name": "收集与整理数据", "tags": ["数据"] },
+            { "id": "kp.data.table", "name": "用表格/图形表示数据", "tags": ["数据"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

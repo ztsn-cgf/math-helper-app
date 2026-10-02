@@ -1,0 +1,105 @@
+{
+  "schema": "misconceptions/v1",
+  "description": "典型误区清单。每条的 wrongIdea 是孩子常见错误想法，correctAnchor 是正确的量感锚点/规则，用于「归因」时识别误区、以及生成纠正性讲解。",
+  "misconceptions": [
+    { "id": "mis.len.rate", "concept": "长度单位进率", "knowledgeKeys": ["长度单位", "进率换算"],
+      "wrongIdea": "认为相邻长度单位进率是 100 或 1000，如「1 厘米 = 100 毫米」。",
+      "correctAnchor": "mm → cm → dm → m 每相邻两个进率是 10；m 到 km 进率是 1000。",
+      "teachingTip": "用直尺让孩子数：1 厘米里有 10 个小格（毫米）。" },
+
+    { "id": "mis.len.mm", "concept": "毫米量感", "knowledgeKeys": ["长度单位", "量感"],
+      "wrongIdea": "对「毫米」没概念，写出「9 毫米的高楼」这类明显离谱的量。",
+      "correctAnchor": "1 毫米 = 身份证厚度；高楼要用「米」。",
+      "teachingTip": "先摸身份证边，再让孩子用手比划 1 毫米、1 厘米、1 米的差距。" },
+
+    { "id": "mis.len.order", "concept": "长度单位大小", "knowledgeKeys": ["长度单位", "单位选择"],
+      "wrongIdea": "搞反单位大小，认为厘米比毫米小。",
+      "correctAnchor": "毫米 < 厘米 < 分米 < 米 < 千米。",
+      "teachingTip": "排序口诀：越「小」的单位，1 个单位越短。" },
+
+    { "id": "mis.len.choose", "concept": "单位选择", "knowledgeKeys": ["长度单位", "单位选择"],
+      "wrongIdea": "选错单位，如「南京长江大桥长 7 米」「教室门高 40 米」。",
+      "correctAnchor": "先想参照物：大桥要用「千米」，门高用「米」，铅笔用「厘米」。",
+      "teachingTip": "先估（是几米还是几千米），再选单位。" },
+
+    { "id": "mis.mass.rate", "concept": "质量单位进率", "knowledgeKeys": ["质量单位", "进率换算"],
+      "wrongIdea": "认为「1 吨 = 100 千克」或「1 千克 = 100 克」。",
+      "correctAnchor": "1 吨 = 1000 千克，1 千克 = 1000 克。",
+      "teachingTip": "质量是「千进制」，相邻进率都是 1000。" },
+
+    { "id": "mis.mass.order", "concept": "质量单位大小", "knowledgeKeys": ["质量单位", "单位选择"],
+      "wrongIdea": "认为「1 千克 = 10 吨」，吨比千克小。",
+      "correctAnchor": "克 < 千克 < 吨，1 吨 = 1000 千克。",
+      "teachingTip": "用「一头奶牛 = 1 吨」锚定吨到底多重。" },
+
+    { "id": "mis.area.rate", "concept": "面积单位进率", "knowledgeKeys": ["面积单位", "进率换算"],
+      "wrongIdea": "把长度进率 10 用到面积上，如「1 平方米 = 10 平方分米」。",
+      "correctAnchor": "相邻面积单位进率是 100：1 m² = 100 dm² = 10000 cm²。",
+      "teachingTip": "因为面积是「边长 × 边长」，10 × 10 = 100。" },
+
+    { "id": "mis.area.unit", "concept": "面积单位名称", "knowledgeKeys": ["面积单位", "单位选择"],
+      "wrongIdea": "把长度单位当面积用，如「桌子面积是 32 厘米」。",
+      "correctAnchor": "面积用「平方」单位（平方厘米/平方分米/平方米）。",
+      "teachingTip": "长度量的是「线」（厘米），面积量的是「面」（平方厘米）。" },
+
+    { "id": "mis.pa.mix", "concept": "周长 vs 面积", "knowledgeKeys": ["周长", "面积", "概念区分"],
+      "wrongIdea": "混淆周长和面积，公式与单位都用错（周长算面积、面积写长度单位）。",
+      "correctAnchor": "周长是「线」（绕一圈），面积是「面」（铺满多少块）。",
+      "teachingTip": "一个看边线，一个看里面铺满；分别用「米」和「平方米」。" },
+
+    { "id": "mis.time.rate", "concept": "时间单位进率", "knowledgeKeys": ["时间单位", "进率换算"],
+      "wrongIdea": "误以为「1 小时 = 100 分」，用十进制算时间。",
+      "correctAnchor": "1 小时 = 60 分钟，1 分钟 = 60 秒（60 进制）。",
+      "teachingTip": "钟面一圈 60 小格，不是 100 格。" },
+
+    { "id": "mis.time.24h", "concept": "24 时计时法", "knowledgeKeys": ["时间单位", "年月日"],
+      "wrongIdea": "下午时间不会换算，如把「下午 3 时」写成「3 时」而不是「15 时」。",
+      "correctAnchor": "下午的时间 = 钟面时间 + 12（下午 3 时 = 15 时）。",
+      "teachingTip": "过了中午 12 点，继续往后数就是 13、14、15 时。" },
+
+    { "id": "mis.views.one", "concept": "观察物体", "knowledgeKeys": ["观察物体", "三视图"],
+      "wrongIdea": "只从一个方向看就下结论，认为立体图形从哪看都一样。",
+      "correctAnchor": "从前面、上面、侧面看，同一个立体图形可能形状不同。",
+      "teachingTip": "用实物（积木）从三个方向各拍一张，对比差异。" },
+
+    { "id": "mis.motion.mix", "concept": "图形的运动", "knowledgeKeys": ["图形的运动", "平移", "旋转"],
+      "wrongIdea": "分不清平移和旋转。",
+      "correctAnchor": "平移是「直着滑」不转向；旋转是「绕一个点转」。",
+      "teachingTip": "电梯是平移，风车、钟表指针是旋转。" },
+
+    { "id": "mis.symmetry", "concept": "轴对称", "knowledgeKeys": ["图形的运动", "轴对称"],
+      "wrongIdea": "以为只有左右对称才叫轴对称，斜着对折的不算。",
+      "correctAnchor": "沿某条直线对折能完全重合，就是轴对称图形。",
+      "teachingTip": "用对折剪纸直观感受任意方向的对称轴。" },
+
+    { "id": "mis.zero.div", "concept": "0 的除法", "knowledgeKeys": ["除法", "0 的运算"],
+      "wrongIdea": "认为「任何数 ÷ 0 = 0」。",
+      "correctAnchor": "0 除以任何非 0 数得 0；但任何数都不能除以 0（无意义）。",
+      "teachingTip": "0 个苹果分给 5 人每人 0 个；但「分给 0 人」没法分。" },
+
+    { "id": "mis.zero.quot", "concept": "商中间/末尾的 0", "knowledgeKeys": ["除法"],
+      "wrongIdea": "除法竖式里漏写商中间的 0，如 606 ÷ 3 写成 22。",
+      "correctAnchor": "哪一位不够商 1，就在那一位写 0 占位（606 ÷ 3 = 202）。",
+      "teachingTip": "逐位除，除到 0 或不够除就商 0。" },
+
+    { "id": "mis.mixed.order", "concept": "混合运算顺序", "knowledgeKeys": ["混合运算"],
+      "wrongIdea": "总是从左往右算，忘记「先乘除后加减」和括号优先。",
+      "correctAnchor": "先算乘除、再算加减；有小括号先算括号里的。",
+      "teachingTip": "画「先算什么」的圈，训练找第一步。" },
+
+    { "id": "mis.multiply.carry", "concept": "乘法进位", "knowledgeKeys": ["乘法"],
+      "wrongIdea": "多位数乘一位数时忘了加进上来的数。",
+      "correctAnchor": "个位乘完，把进位数加到十位上，依次类推。",
+      "teachingTip": "竖式里把进位数写小一点记在旁边。" },
+
+    { "id": "mis.decimal.dot", "concept": "认识小数", "knowledgeKeys": ["小数"],
+      "wrongIdea": "混淆 1.5 米 与 1 米 5 厘米，把 1.05 和 1.5 当成一样。",
+      "correctAnchor": "1.5 米 = 1 米 5 分米；1.05 米 = 1 米 5 厘米，小数点后第一位是分米。",
+      "teachingTip": "用米尺标出 1 米 5 分米 和 1 米 5 厘米 的位置对比。" },
+
+    { "id": "mis.fraction.compare", "concept": "认识分数", "knowledgeKeys": ["分数", "分数大小比较"],
+      "wrongIdea": "认为分母大的分数就大，如 1/3 > 1/2。",
+      "correctAnchor": "分子相同（都是 1）时，分母越大、分得越细、每份越小：1/3 < 1/2。",
+      "teachingTip": "同一块饼，分 2 份和分 3 份，哪份更大？" }
+  ]
+}

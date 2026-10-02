@@ -1,0 +1,28 @@
+{
+  "schema": "reference-materials/v1",
+  "description": "参照物/量感锚点素材清单。每条给一个可触摸的生活参照物，把抽象单位变成孩子脑子里的锚点。用于生成「图文参照卡（card）」讲解。",
+  "materials": [
+    { "id": "ref.len.1mm", "concept": "长度单位", "unit": "1 毫米 (mm)", "anchor": "身份证/银行卡的厚度", "detail": "身份证边沿的厚度大约就是 1 毫米，非常薄。", "tags": ["量感", "长度"] },
+    { "id": "ref.len.1cm", "concept": "长度单位", "unit": "1 厘米 (cm)", "anchor": "手指甲盖的宽度", "detail": "大拇指指甲盖的宽度大约是 1 厘米。", "tags": ["量感", "长度"] },
+    { "id": "ref.len.1dm", "concept": "长度单位", "unit": "1 分米 (dm)", "anchor": "一个拳头的宽度", "detail": "握起拳头，拳头的宽度大约是 1 分米（10 厘米）。", "tags": ["量感", "长度"] },
+    { "id": "ref.len.1m", "concept": "长度单位", "unit": "1 米 (m)", "anchor": "门把手离地的高度", "detail": "家里门把手离地面差不多 1 米；张开双臂两手之间的长度也接近 1 米。", "tags": ["量感", "长度"] },
+    { "id": "ref.len.1km", "concept": "长度单位", "unit": "1 千米 (km)", "anchor": "400 米操场跑 2 圈半", "detail": "标准操场一圈 400 米，2 圈半就是 1000 米；走路大约 12～15 分钟。", "tags": ["量感", "长度"] },
+
+    { "id": "ref.mass.1g", "concept": "质量单位", "unit": "1 克 (g)", "anchor": "一枚回形针 / 两粒花生米", "detail": "一枚回形针大约 1 克，很轻，用手几乎感觉不到。", "tags": ["量感", "质量"] },
+    { "id": "ref.mass.10g", "concept": "质量单位", "unit": "10 克", "anchor": "两枚 1 元硬币", "detail": "一枚 1 元硬币约 6 克，两枚约 12 克。", "tags": ["量感", "质量"] },
+    { "id": "ref.mass.1kg", "concept": "质量单位", "unit": "1 千克 (kg)", "anchor": "两瓶 500ml 矿泉水 / 一袋盐", "detail": "两瓶 500 毫升的矿泉水加起来正好 1 千克。", "tags": ["量感", "质量"] },
+    { "id": "ref.mass.1t", "concept": "质量单位", "unit": "1 吨 (t)", "anchor": "一头成年奶牛 / 约 40 名小学生", "detail": "1 吨 = 1000 千克，大约是一头奶牛或一辆小轿车的重量。", "tags": ["量感", "质量"] },
+
+    { "id": "ref.time.1s", "concept": "时间单位", "unit": "1 秒 (s)", "anchor": "眨一下眼睛 / 说一个「一」字", "detail": "眨一下眼睛的时间大约是 1 秒。", "tags": ["量感", "时间"] },
+    { "id": "ref.time.1min", "concept": "时间单位", "unit": "1 分钟 (min)", "anchor": "心跳大约 70 次", "detail": "安静时，1 分钟心跳大约 70 次。", "tags": ["量感", "时间"] },
+    { "id": "ref.time.1h", "concept": "时间单位", "unit": "1 小时 (h)", "anchor": "约两节课 / 一集动画片", "detail": "1 小时 = 60 分钟，差不多是两节课或一集长动画片。", "tags": ["量感", "时间"] },
+    { "id": "ref.time.1day", "concept": "时间单位", "unit": "1 天", "anchor": "24 小时", "detail": "一天 24 小时，时针在钟面上转两圈。", "tags": ["量感", "时间"] },
+
+    { "id": "ref.area.1cm2", "concept": "面积单位", "unit": "1 平方厘米 (cm²)", "anchor": "大拇指指甲盖的面", "detail": "大拇指指甲盖的面大约就是 1 平方厘米。", "tags": ["量感", "面积"] },
+    { "id": "ref.area.1dm2", "concept": "面积单位", "unit": "1 平方分米 (dm²)", "anchor": "张开的手掌面", "detail": "张开手掌，整个手掌面大约 1 平方分米。", "tags": ["量感", "面积"] },
+    { "id": "ref.area.1m2", "concept": "面积单位", "unit": "1 平方米 (m²)", "anchor": "一张方桌桌面 / 4 块 50cm 地砖", "detail": "边长 1 米的正方形面积是 1 平方米，约 4 块 50 厘米的地砖拼起来。", "tags": ["量感", "面积"] },
+
+    { "id": "ref.pa.perimeter", "concept": "周长 vs 面积", "unit": "周长", "anchor": "用绳子绕图形一圈的长度", "detail": "周长是「线」，像给花坛围一圈篱笆，量的是边线有多长。", "tags": ["概念区分"] },
+    { "id": "ref.pa.area", "concept": "周长 vs 面积", "unit": "面积", "anchor": "用小方块铺满需要多少块", "detail": "面积是「面」，像给地面铺瓷砖，数的是铺满需要多少块。", "tags": ["概念区分"] }
+  ]
+}
