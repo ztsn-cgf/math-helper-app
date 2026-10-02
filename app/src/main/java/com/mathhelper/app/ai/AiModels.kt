@@ -45,3 +45,8 @@ data class PracticeQuestionDto(
     val answer: String = "",
     val options: List<String> = emptyList()
 )
+
+@Serializable
+data class PracticeQuestionsResult(
+    @SerialName("practice_questions") val practiceQuestions: List<PracticeQuestionDto> = emptyList()
+)

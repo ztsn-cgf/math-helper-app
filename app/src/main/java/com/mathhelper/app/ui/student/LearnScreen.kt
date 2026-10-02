@@ -37,6 +37,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mathhelper.app.ai.AiConfig
+import com.mathhelper.app.ai.AttributionService
+import com.mathhelper.app.ai.DeepSeekClient
 import com.mathhelper.app.data.local.AppDatabase
 import com.mathhelper.app.data.local.entity.AttemptEntity
 import com.mathhelper.app.data.local.entity.ExplanationEntity
@@ -52,6 +55,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidViewModel(app) {
 
@@ -89,6 +93,40 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
 
     private val _feedbackMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val feedbackMap: StateFlow<Map<String, String>> = _feedbackMap
+
+    private val _generating = MutableStateFlow<String?>(null)
+    val generating: StateFlow<String?> = _generating
+
+    fun generateQuestions() {
+        viewModelScope.launch {
+            val config = AiConfig.from(getApplication())
+            if (!config.isConfigured) {
+                _generating.value = "请先在「家长模式 → AI 设置」填 DeepSeek key"
+                return@launch
+            }
+            _generating.value = "正在出题…"
+            val name = db.knowledgePointDao().getById(kpId)?.name ?: kpId
+            val service = AttributionService(DeepSeekClient(config), db.knowledgePointDao())
+            val list = runCatching { service.generatePracticeQuestions(name) }
+                .getOrDefault(emptyList())
+            if (list.isEmpty()) {
+                _generating.value = "出题失败，请重试"
+                return@launch
+            }
+            db.practiceQuestionDao().insertAll(
+                list.mapIndexed { i, q ->
+                    PracticeQuestionEntity(
+                        id = "q.$kpId.${UUID.randomUUID()}",
+                        knowledgePointId = kpId,
+                        content = q.question,
+                        answer = q.answer,
+                        options = q.options
+                    )
+                }
+            )
+            _generating.value = null
+        }
+    }
 
     fun submitAnswer(question: PracticeQuestionEntity, userAnswer: String) {
         viewModelScope.launch {
@@ -141,8 +179,16 @@ fun LearnScreen(
     val misconceptions by vm.misconceptions.collectAsState()
     val questions by vm.questions.collectAsState()
     val feedbackMap by vm.feedbackMap.collectAsState()
+    val generating by vm.generating.collectAsState()
 
     var answers by remember { mutableStateOf(mapOf<String, String>()) }
+
+    val motionMode = when {
+        knowledgePointId.endsWith(".trans") -> "trans"
+        knowledgePointId.endsWith(".rotate") -> "rotate"
+        knowledgePointId.endsWith(".sym") -> "sym"
+        else -> null
+    }
 
     Scaffold(
         topBar = {
@@ -161,6 +207,17 @@ fun LearnScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                motionMode?.let { mode ->
+                    item {
+                        Card {
+                            Column(Modifier.padding(16.dp)) {
+                                Text("动一动看看", style = MaterialTheme.typography.titleMedium)
+                                MotionDemo(mode)
+                            }
+                        }
+                    }
+                }
+
                 explanation?.let { ex ->
                     item {
                         ExplanationCard(ex)
@@ -191,11 +248,26 @@ fun LearnScreen(
 
                 if (questions.isEmpty()) {
                     item {
-                        Text(
-                            "还没有同类题，让家长再录入几道错题吧",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        val gen = generating
+                        if (gen != null) {
+                            Text(
+                                gen,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                "这里还没有练习题，可以自动出几道：",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = { vm.generateQuestions() },
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text("出几道题练练")
+                            }
+                        }
                     }
                 }
 
