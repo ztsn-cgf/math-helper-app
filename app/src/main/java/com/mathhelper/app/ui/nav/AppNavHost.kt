@@ -12,6 +12,7 @@ import com.mathhelper.app.ui.parent.MasteryMapScreen
 import com.mathhelper.app.ui.parent.MistakeListScreen
 import com.mathhelper.app.ui.parent.ParentHomeScreen
 import com.mathhelper.app.ui.parent.PhotoEntryScreen
+import com.mathhelper.app.ui.parent.SettingsScreen
 import com.mathhelper.app.ui.student.LearnScreen
 import com.mathhelper.app.ui.student.StudentHomeScreen
 
@@ -24,6 +25,7 @@ object Routes {
     const val MASTERY_MAP = "mastery_map"
     const val STUDENT = "student"
     const val STUDY_BROWSE = "study_browse"
+    const val SETTINGS = "settings"
     const val LEARN = "learn/{knowledgePointId}"
 
     fun learn(knowledgePointId: String) = "learn/$knowledgePointId"
@@ -52,7 +54,8 @@ fun AppNavHost() {
                 onBack = { navController.popBackStack() },
                 onPhotoEntry = { navController.navigate(Routes.PHOTO_ENTRY) },
                 onMistakeList = { navController.navigate(Routes.MISTAKE_LIST) },
-                onMasteryMap = { navController.navigate(Routes.MASTERY_MAP) }
+                onMasteryMap = { navController.navigate(Routes.MASTERY_MAP) },
+                onSettings = { navController.navigate(Routes.SETTINGS) }
             )
         }
 
@@ -66,6 +69,10 @@ fun AppNavHost() {
 
         composable(Routes.MASTERY_MAP) {
             MasteryMapScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.STUDENT) {

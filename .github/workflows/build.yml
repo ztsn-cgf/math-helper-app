@@ -41,4 +41,4 @@ jobs:
       - name: Publish Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create v0.2.0 app/build/outputs/apk/debug/*.apk --repo "${{ github.repository }}" --title "数学助手 v0.2.0 测试版" --notes "修复拍照闪退；新增学生「自己学」按知识点学习" || echo "tag 已存在，跳过发布"
+        run: gh release create v0.3.0 app/build/outputs/apk/debug/*.apk --repo "${{ github.repository }}" --title "数学助手 v0.3.0 测试版" --notes "修复拍照权限；新增 AI 设置（填 DeepSeek key 后自动归因+出题）" || echo "tag 已存在，跳过发布"

@@ -2,8 +2,11 @@ package com.mathhelper.app.ui.parent
 
 import android.app.Application
 import android.content.Context
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.core.content.ContextCompat
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -198,6 +201,14 @@ fun PhotoEntryScreen(
             }
         }
     }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            runCatching { cameraLauncher.launch(null) }
+                .onFailure { viewModel.setError("无法打开相机，请改用「从相册选」") }
+        } else {
+            viewModel.setError("未授予相机权限，请改用「从相册选」，或在系统设置里允许相机权限")
+        }
+    }
 
     val effectiveKpId = manualKpId ?: uiState.attribution?.knowledgePointId
     val effectiveKpName = topics.firstOrNull { it.id == effectiveKpId }?.name
@@ -227,8 +238,12 @@ fun PhotoEntryScreen(
                         BigActionButton(
                             "拍照",
                             onClick = {
-                                runCatching { cameraLauncher.launch(null) }
-                                    .onFailure { viewModel.setError("无法打开相机（可能设备没有摄像头），请改用「从相册选」") }
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                    runCatching { cameraLauncher.launch(null) }
+                                        .onFailure { viewModel.setError("无法打开相机，请改用「从相册选」") }
+                                } else {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                }
                             }
                         )
                         BigActionButton(

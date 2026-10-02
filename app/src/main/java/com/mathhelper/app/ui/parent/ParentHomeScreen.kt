@@ -40,7 +40,8 @@ fun ParentHomeScreen(
     onBack: () -> Unit,
     onPhotoEntry: () -> Unit,
     onMistakeList: () -> Unit,
-    onMasteryMap: () -> Unit
+    onMasteryMap: () -> Unit,
+    onSettings: () -> Unit
 ) {
     var unlocked by remember { mutableStateOf(false) }
     if (!unlocked) {
@@ -50,7 +51,8 @@ fun ParentHomeScreen(
             onBack = onBack,
             onPhotoEntry = onPhotoEntry,
             onMistakeList = onMistakeList,
-            onMasteryMap = onMasteryMap
+            onMasteryMap = onMasteryMap,
+            onSettings = onSettings
         )
     }
 }
@@ -61,7 +63,8 @@ private fun ParentContent(
     onBack: () -> Unit,
     onPhotoEntry: () -> Unit,
     onMistakeList: () -> Unit,
-    onMasteryMap: () -> Unit
+    onMasteryMap: () -> Unit,
+    onSettings: () -> Unit
 ) {
     var showChangePin by remember { mutableStateOf(false) }
     Scaffold(
@@ -84,6 +87,7 @@ private fun ParentContent(
                 BigActionButton("录入错题", onClick = onPhotoEntry)
                 BigActionButton("错题列表", onClick = onMistakeList)
                 BigActionButton("掌握度地图", onClick = onMasteryMap)
+                BigActionButton("AI 设置", onClick = onSettings)
                 TextButton(onClick = { showChangePin = true }) { Text("修改 PIN") }
             }
         }
