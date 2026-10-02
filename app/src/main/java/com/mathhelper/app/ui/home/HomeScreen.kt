@@ -45,6 +45,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var downloading by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf<Int?>(null) }
     var checking by remember { mutableStateOf(false) }
     var updateMsg by remember { mutableStateOf<String?>(null) }
 
@@ -109,17 +110,32 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { updateInfo = null },
             title = { Text("发现新版本 ${info.version}") },
-            text = { Text(if (downloading) "正在下载…" else "是否下载并更新到最新版？") },
+            text = {
+                Text(
+                    when {
+                        downloading && progress != null -> "正在下载… $progress%"
+                        downloading -> "正在下载…"
+                        else -> "是否下载并更新到最新版？"
+                    }
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scope.launch {
                             downloading = true
-                            val file = UpdateChecker.downloadApk(context, info.downloadUrl)
+                            progress = 0
+                            val file = UpdateChecker.downloadApk(context, info.downloadUrl) { p ->
+                                progress = p
+                            }
                             if (file != null) {
                                 UpdateChecker.installApk(context, file)
+                            } else {
+                                updateMsg = "下载失败，请检查网络后重试"
                             }
                             downloading = false
+                            progress = null
+                            updateInfo = null
                         }
                     },
                     enabled = !downloading

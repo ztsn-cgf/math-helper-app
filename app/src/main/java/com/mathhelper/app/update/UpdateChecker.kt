@@ -32,6 +32,12 @@ data class GithubAsset(
 object UpdateChecker {
 
     private const val API = "https://api.github.com/repos/ztsn-cgf/math-helper-app/releases/latest"
+    // GitHub 直连在国内较慢，下载 APK 时优先走加速镜像，逐个尝试，全失败再回退直连
+    private val MIRRORS = listOf(
+        "https://ghproxy.net/",
+        "https://gh-proxy.com/",
+        "https://ghfast.top/"
+    )
     private val json = Json { ignoreUnknownKeys = true }
 
     fun currentVersion(context: Context): String =
@@ -67,22 +73,45 @@ object UpdateChecker {
         return false
     }
 
-    suspend fun downloadApk(context: Context, url: String): File? = withContext(Dispatchers.IO) {
+    suspend fun downloadApk(
+        context: Context,
+        url: String,
+        onProgress: ((Int) -> Unit)? = null
+    ): File? = withContext(Dispatchers.IO) {
+        val candidates = MIRRORS.map { it + url } + url
+        for (candidate in candidates) {
+            val file = downloadOne(context, candidate, onProgress)
+            if (file != null) return@withContext file
+        }
+        null
+    }
+
+    private fun downloadOne(context: Context, url: String, onProgress: ((Int) -> Unit)?): File? =
         runCatching {
             val file = File(context.cacheDir, "update.apk")
             val conn = URL(url).openConnection() as HttpURLConnection
             try {
                 conn.connectTimeout = 15_000
                 conn.readTimeout = 120_000
+                val total = conn.contentLengthLong
                 conn.inputStream.use { input ->
-                    file.outputStream().use { output -> input.copyTo(output) }
+                    file.outputStream().use { output ->
+                        val buf = ByteArray(64 * 1024)
+                        var read = 0L
+                        while (true) {
+                            val n = input.read(buf)
+                            if (n == -1) break
+                            output.write(buf, 0, n)
+                            read += n
+                            if (total > 0) onProgress?.invoke(((read * 100) / total).toInt())
+                        }
+                    }
                 }
+                file
             } finally {
                 conn.disconnect()
             }
-            file
         }.getOrNull()
-    }
 
     fun installApk(context: Context, file: File) {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
