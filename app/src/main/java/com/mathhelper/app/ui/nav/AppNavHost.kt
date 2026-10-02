@@ -23,6 +23,7 @@ object Routes {
     const val MISTAKE_LIST = "mistake_list"
     const val MASTERY_MAP = "mastery_map"
     const val STUDENT = "student"
+    const val STUDY_BROWSE = "study_browse"
     const val LEARN = "learn/{knowledgePointId}"
 
     fun learn(knowledgePointId: String) = "learn/$knowledgePointId"
@@ -70,7 +71,16 @@ fun AppNavHost() {
         composable(Routes.STUDENT) {
             StudentHomeScreen(
                 onBack = { navController.popBackStack() },
-                onLearn = { kpId -> navController.navigate(Routes.learn(kpId)) }
+                onLearn = { kpId -> navController.navigate(Routes.learn(kpId)) },
+                onBrowse = { navController.navigate(Routes.STUDY_BROWSE) }
+            )
+        }
+
+        composable(Routes.STUDY_BROWSE) {
+            KnowledgeTreeScreen(
+                onBack = { navController.popBackStack() },
+                title = "自己学",
+                onTopicClick = { kpId -> navController.navigate(Routes.learn(kpId)) }
             )
         }
 

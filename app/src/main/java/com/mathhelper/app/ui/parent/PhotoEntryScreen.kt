@@ -115,6 +115,10 @@ class PhotoEntryViewModel(app: Application) : AndroidViewModel(app) {
         _uiState.value = _uiState.value.copy(ocrText = text)
     }
 
+    fun setError(message: String) {
+        _uiState.value = _uiState.value.copy(error = message)
+    }
+
     fun save(selectedKpId: String) {
         viewModelScope.launch {
             val attribution = _uiState.value.attribution
@@ -220,7 +224,13 @@ fun PhotoEntryScreen(
             if (previewBitmap == null) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        BigActionButton("拍照", onClick = { cameraLauncher.launch(null) })
+                        BigActionButton(
+                            "拍照",
+                            onClick = {
+                                runCatching { cameraLauncher.launch(null) }
+                                    .onFailure { viewModel.setError("无法打开相机（可能设备没有摄像头），请改用「从相册选」") }
+                            }
+                        )
                         BigActionButton(
                             "从相册选",
                             onClick = {
@@ -234,6 +244,13 @@ fun PhotoEntryScreen(
                                 "未配置 AI（secrets.properties），将跳过自动归因，可手动选知识点。",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        uiState.error?.let { err ->
+                            Text(
+                                err,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }

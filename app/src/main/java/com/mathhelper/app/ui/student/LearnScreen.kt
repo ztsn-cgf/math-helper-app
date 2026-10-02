@@ -41,6 +41,7 @@ import com.mathhelper.app.data.local.AppDatabase
 import com.mathhelper.app.data.local.entity.AttemptEntity
 import com.mathhelper.app.data.local.entity.ExplanationEntity
 import com.mathhelper.app.data.local.entity.MasteryEntity
+import com.mathhelper.app.data.local.entity.MisconceptionEntity
 import com.mathhelper.app.data.local.entity.PracticeQuestionEntity
 import com.mathhelper.app.data.local.entity.ReferenceMaterialEntity
 import com.mathhelper.app.ui.common.BackButton
@@ -70,6 +71,17 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
     ) { kp, all ->
         if (kp == null) emptyList()
         else all.filter { kp.name.contains(it.concept) || it.concept.contains(kp.name) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val misconceptions = combine(
+        db.knowledgePointDao().observeById(kpId),
+        db.misconceptionDao().observeAll()
+    ) { kp, all ->
+        if (kp == null) emptyList()
+        else all.filter { m ->
+            (kp.name.contains(m.concept) || m.concept.contains(kp.name)) ||
+                m.knowledgeKeys.any { kp.name.contains(it) || it.contains(kp.name) }
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val questions = db.practiceQuestionDao().observeForKnowledgePoint(kpId)
@@ -126,6 +138,7 @@ fun LearnScreen(
     val kpName by vm.kpName.collectAsState()
     val explanation by vm.explanation.collectAsState()
     val referenceMaterials by vm.referenceMaterials.collectAsState()
+    val misconceptions by vm.misconceptions.collectAsState()
     val questions by vm.questions.collectAsState()
     val feedbackMap by vm.feedbackMap.collectAsState()
 
@@ -160,6 +173,15 @@ fun LearnScreen(
                     }
                     items(referenceMaterials, key = { it.id }) { mat ->
                         ReferenceMaterialCard(mat)
+                    }
+                }
+
+                if (misconceptions.isNotEmpty()) {
+                    item {
+                        Text("容易搞错的地方", style = MaterialTheme.typography.titleMedium)
+                    }
+                    items(misconceptions, key = { it.id }) { m ->
+                        MisconceptionCard(m)
                     }
                 }
 
@@ -221,6 +243,29 @@ private fun ReferenceMaterialCard(material: ReferenceMaterialEntity) {
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MisconceptionCard(misconception: MisconceptionEntity) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                misconception.concept,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                "✗ 常见错误：${misconception.wrongIdea}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                "✓ 正确理解：${misconception.correctAnchor}",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

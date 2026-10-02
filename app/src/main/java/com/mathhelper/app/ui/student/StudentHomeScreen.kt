@@ -54,6 +54,7 @@ class StudentHomeViewModel(app: Application) : AndroidViewModel(app) {
 fun StudentHomeScreen(
     onBack: () -> Unit,
     onLearn: (String) -> Unit,
+    onBrowse: () -> Unit,
     viewModel: StudentHomeViewModel = viewModel()
 ) {
     val suggestedKpId by viewModel.suggestedKpId.collectAsState()
@@ -83,9 +84,9 @@ fun StudentHomeScreen(
                 )
                 BigActionButton(
                     text = "开始学习",
-                    onClick = { suggestedKpId?.let(onLearn) },
-                    modifier = if (suggestedKpId == null) Modifier else Modifier
+                    onClick = { suggestedKpId?.let(onLearn) }
                 )
+                BigActionButton(text = "自己学（按知识点）", onClick = onBrowse)
             }
         }
     }

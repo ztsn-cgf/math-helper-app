@@ -98,6 +98,8 @@ class KnowledgeTreeViewModel(app: Application) : AndroidViewModel(app) {
 @Composable
 fun KnowledgeTreeScreen(
     onBack: () -> Unit,
+    title: String = "知识点树",
+    onTopicClick: ((String) -> Unit)? = null,
     viewModel: KnowledgeTreeViewModel = viewModel()
 ) {
     val domains by viewModel.domains.collectAsState()
@@ -107,7 +109,7 @@ fun KnowledgeTreeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("知识点树") },
+                title = { Text(title) },
                 navigationIcon = { TextButton(onClick = onBack) { Text("返回") } }
             )
         }
@@ -123,7 +125,7 @@ fun KnowledgeTreeScreen(
             ) {
                 item { SummaryCard(domains, miscCount, refCount) }
                 items(domains, key = { it.id }) { domain ->
-                    DomainCard(domain)
+                    DomainCard(domain, onTopicClick)
                 }
             }
         }
@@ -155,7 +157,7 @@ private fun SummaryCard(
 }
 
 @Composable
-private fun DomainCard(domain: DomainUi) {
+private fun DomainCard(domain: DomainUi, onTopicClick: ((String) -> Unit)?) {
     var expanded by remember { mutableStateOf(true) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
@@ -178,14 +180,14 @@ private fun DomainCard(domain: DomainUi) {
             }
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
-                domain.areas.forEach { area -> AreaItem(area) }
+                domain.areas.forEach { area -> AreaItem(area, onTopicClick) }
             }
         }
     }
 }
 
 @Composable
-private fun AreaItem(area: AreaUi) {
+private fun AreaItem(area: AreaUi, onTopicClick: ((String) -> Unit)?) {
     Column(Modifier.padding(vertical = 6.dp)) {
         Text(
             area.name,
@@ -200,11 +202,21 @@ private fun AreaItem(area: AreaUi) {
             )
         }
         area.topics.forEach { topic ->
-            Text(
-                "· ${topic.name}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 12.dp, top = 2.dp)
-            )
+            val base = Modifier.padding(start = 12.dp, top = 2.dp)
+            if (onTopicClick != null) {
+                Text(
+                    "· ${topic.name}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = base.clickable { onTopicClick(topic.id) }
+                )
+            } else {
+                Text(
+                    "· ${topic.name}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = base
+                )
+            }
         }
     }
 }
