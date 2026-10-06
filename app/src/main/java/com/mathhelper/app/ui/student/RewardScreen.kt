@@ -38,7 +38,7 @@ import com.mathhelper.app.util.RewardStore
 @Composable
 fun RewardScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val store = remember { RewardStore(context) }
+    val store = remember { RewardStore.getInstance(context) }
     val stars by store.stars.collectAsState()
     val name by store.childName.collectAsState()
     val redeemedCounts by store.redeemedCounts.collectAsState()

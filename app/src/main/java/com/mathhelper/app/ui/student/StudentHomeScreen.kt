@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class StudentHomeViewModel(app: Application) : AndroidViewModel(app) {
     private val db = AppDatabase.getInstance(app)
-    private val rewardStore = RewardStore(app)
+    private val rewardStore = RewardStore.getInstance(app)
 
     /** 建议学习知识点：优先最近错题，其次待复习，最后最薄弱的知识点。 */
     val suggestedKpId: StateFlow<String?> = combine(

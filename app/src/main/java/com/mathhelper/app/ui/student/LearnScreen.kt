@@ -75,7 +75,7 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
 
     private val db = AppDatabase.getInstance(app)
     private val kpId = knowledgePointId
-    private val rewardStore = RewardStore(app)
+    private val rewardStore = RewardStore.getInstance(app)
 
     val kpName = db.knowledgePointDao().observeById(kpId)
         .map { it?.name ?: "" }

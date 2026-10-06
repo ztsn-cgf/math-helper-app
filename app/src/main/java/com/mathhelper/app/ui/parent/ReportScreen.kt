@@ -79,7 +79,7 @@ data class ReportUiState(
 class ReportViewModel(app: Application) : AndroidViewModel(app) {
 
     private val db = AppDatabase.getInstance(app)
-    private val rewardStore = RewardStore(app)
+    private val rewardStore = RewardStore.getInstance(app)
 
     private data class DbBundle(
         val attempts: List<AttemptEntity>,

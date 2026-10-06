@@ -29,7 +29,7 @@ import com.mathhelper.app.util.RewardStore
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val rewardStore = remember { RewardStore(context) }
+    val rewardStore = remember { RewardStore.getInstance(context) }
     var apiKey by remember { mutableStateOf(AiConfig.currentApiKey(context)) }
     var saved by remember { mutableStateOf(false) }
     var childName by remember { mutableStateOf(rewardStore.childName.value) }

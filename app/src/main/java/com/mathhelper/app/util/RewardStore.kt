@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
  * 奖励存储：星星当「钱」用，攒够可兑换奖励（家长 PIN 兑换，扣减星星）。
  * 可多次兑换同一类奖励。SharedPreferences 本地保存。
  */
-class RewardStore(context: Context) {
+class RewardStore private constructor(context: Context) {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences("reward", Context.MODE_PRIVATE)
@@ -86,6 +86,15 @@ class RewardStore(context: Context) {
         } ?: emptyMap()
 
     companion object {
+        @Volatile
+        private var INSTANCE: RewardStore? = null
+
+        /** 单例：各屏共享同一份 StateFlow，星星/称呼/兑换实时联动。 */
+        fun getInstance(context: Context): RewardStore =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: RewardStore(context.applicationContext).also { INSTANCE = it }
+            }
+
         private const val KEY_STARS = "total_stars"
         private const val KEY_NAME = "child_name"
         private const val KEY_COUNTS = "redeemed_counts"
