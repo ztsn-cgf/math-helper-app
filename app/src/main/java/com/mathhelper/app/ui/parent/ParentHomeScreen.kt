@@ -41,6 +41,7 @@ fun ParentHomeScreen(
     onPhotoEntry: () -> Unit,
     onMistakeList: () -> Unit,
     onMasteryMap: () -> Unit,
+    onReport: () -> Unit,
     onSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -54,6 +55,7 @@ fun ParentHomeScreen(
             onPhotoEntry = onPhotoEntry,
             onMistakeList = onMistakeList,
             onMasteryMap = onMasteryMap,
+            onReport = onReport,
             onSettings = onSettings
         )
     }
@@ -66,6 +68,7 @@ private fun ParentContent(
     onPhotoEntry: () -> Unit,
     onMistakeList: () -> Unit,
     onMasteryMap: () -> Unit,
+    onReport: () -> Unit,
     onSettings: () -> Unit
 ) {
     var showChangePin by remember { mutableStateOf(false) }
@@ -89,6 +92,7 @@ private fun ParentContent(
                 BigActionButton("录入错题", onClick = onPhotoEntry)
                 BigActionButton("错题列表", onClick = onMistakeList)
                 BigActionButton("掌握度地图", onClick = onMasteryMap)
+                BigActionButton("学习报告", onClick = onReport)
                 BigActionButton("AI 设置", onClick = onSettings)
                 TextButton(onClick = { showChangePin = true }) { Text("修改 PIN") }
             }
