@@ -38,8 +38,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mathhelper.app.data.local.AppDatabase
 import com.mathhelper.app.data.local.entity.KnowledgePointEntity
+import com.mathhelper.app.ui.theme.StudentTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -78,6 +80,18 @@ class KnowledgeTreeViewModel(app: Application) : AndroidViewModel(app) {
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    /** 需要巩固的知识点 id：掌握度薄弱/巩固中，或有过错题。 */
+    val weakIds: StateFlow<Set<String>> = combine(
+        db.masteryDao().observeAll(),
+        db.mistakeDao().observeAll()
+    ) { masteries, mistakes ->
+        val ids = mutableSetOf<String>()
+        masteries.filter { it.status == "weak" || it.status == "consolidating" }
+            .forEach { ids.add(it.knowledgePointId) }
+        mistakes.forEach { m -> m.knowledgePointId?.let { ids.add(it) } }
+        ids
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     private fun buildTree(points: List<KnowledgePointEntity>): List<DomainUi> {
         val domains = points.filter { it.type == "domain" }
         val areas = points.filter { it.type == "area" }
@@ -100,11 +114,14 @@ fun KnowledgeTreeScreen(
     onBack: () -> Unit,
     title: String = "知识点树",
     onTopicClick: ((String) -> Unit)? = null,
+    largeText: Boolean = false,
+    showWeakness: Boolean = false,
     viewModel: KnowledgeTreeViewModel = viewModel()
 ) {
     val domains by viewModel.domains.collectAsState()
     val miscCount by viewModel.misconceptionCount.collectAsState()
     val refCount by viewModel.referenceCount.collectAsState()
+    val weakIds by viewModel.weakIds.collectAsState()
 
     Scaffold(
         topBar = {
@@ -114,20 +131,29 @@ fun KnowledgeTreeScreen(
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 840.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        val content: @Composable () -> Unit = {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.TopCenter
             ) {
-                item { SummaryCard(domains, miscCount, refCount) }
-                items(domains, key = { it.id }) { domain ->
-                    DomainCard(domain, onTopicClick)
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 840.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item { SummaryCard(domains, miscCount, refCount) }
+                    items(domains, key = { it.id }) { domain ->
+                        DomainCard(domain, onTopicClick, weakIds, showWeakness)
+                    }
                 }
             }
+        }
+        if (largeText) {
+            StudentTheme {
+                content()
+            }
+        } else {
+            content()
         }
     }
 }
@@ -157,7 +183,12 @@ private fun SummaryCard(
 }
 
 @Composable
-private fun DomainCard(domain: DomainUi, onTopicClick: ((String) -> Unit)?) {
+private fun DomainCard(
+    domain: DomainUi,
+    onTopicClick: ((String) -> Unit)?,
+    weakIds: Set<String>,
+    showWeakness: Boolean
+) {
     var expanded by remember { mutableStateOf(true) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
@@ -180,14 +211,19 @@ private fun DomainCard(domain: DomainUi, onTopicClick: ((String) -> Unit)?) {
             }
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
-                domain.areas.forEach { area -> AreaItem(area, onTopicClick) }
+                domain.areas.forEach { area -> AreaItem(area, onTopicClick, weakIds, showWeakness) }
             }
         }
     }
 }
 
 @Composable
-private fun AreaItem(area: AreaUi, onTopicClick: ((String) -> Unit)?) {
+private fun AreaItem(
+    area: AreaUi,
+    onTopicClick: ((String) -> Unit)?,
+    weakIds: Set<String>,
+    showWeakness: Boolean
+) {
     Column(Modifier.padding(vertical = 6.dp)) {
         Text(
             area.name,
@@ -202,21 +238,21 @@ private fun AreaItem(area: AreaUi, onTopicClick: ((String) -> Unit)?) {
             )
         }
         area.topics.forEach { topic ->
-            val base = Modifier.padding(start = 12.dp, top = 2.dp)
-            if (onTopicClick != null) {
-                Text(
-                    "· ${topic.name}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = base.clickable { onTopicClick(topic.id) }
-                )
-            } else {
-                Text(
-                    "· ${topic.name}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = base
-                )
+            val isWeak = showWeakness && topic.id in weakIds
+            val prefix = if (isWeak) "⚠️ " else "· "
+            val color = when {
+                isWeak -> MaterialTheme.colorScheme.error
+                onTopicClick != null -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
             }
+            val base = Modifier.padding(start = 12.dp, top = 2.dp)
+            val textModifier = if (onTopicClick != null) base.clickable { onTopicClick(topic.id) } else base
+            Text(
+                "$prefix${topic.name}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = color,
+                modifier = textModifier
+            )
         }
     }
 }

@@ -33,7 +33,7 @@ import com.mathhelper.app.data.local.entity.ReferenceMaterialEntity
         MasteryEntity::class,
         AttemptEntity::class
     ],
-    version = 2,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -18,4 +18,15 @@ class PinManager(context: Context) {
     }
 
     fun verify(pin: String): Boolean = pin == getPin()
+
+    /** 家长模式解锁：默认 10 分钟内免再次输入 PIN。 */
+    fun unlock(minutes: Long = 10) {
+        prefs.edit().putLong("unlock_until", System.currentTimeMillis() + minutes * 60_000).apply()
+    }
+
+    fun isUnlocked(): Boolean = System.currentTimeMillis() < prefs.getLong("unlock_until", 0)
+
+    fun clearUnlock() {
+        prefs.edit().putLong("unlock_until", 0).apply()
+    }
 }

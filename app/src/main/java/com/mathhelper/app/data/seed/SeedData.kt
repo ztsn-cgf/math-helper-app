@@ -2,6 +2,7 @@ package com.mathhelper.app.data.seed
 
 import android.content.Context
 import com.mathhelper.app.data.local.AppDatabase
+import com.mathhelper.app.data.local.entity.ExplanationEntity
 import com.mathhelper.app.data.local.entity.KnowledgePointEntity
 import com.mathhelper.app.data.local.entity.MisconceptionEntity
 import com.mathhelper.app.data.local.entity.ReferenceMaterialEntity
@@ -20,6 +21,7 @@ object SeedData {
         db.knowledgePointDao().insertAll(loadKnowledgePoints(context))
         db.misconceptionDao().insertAll(loadMisconceptions(context))
         db.referenceMaterialDao().insertAll(loadReferenceMaterials(context))
+        db.explanationDao().insertAll(loadExplanations(context))
     }
 
     private fun loadKnowledgePoints(context: Context): List<KnowledgePointEntity> {
@@ -72,6 +74,25 @@ object SeedData {
             ReferenceMaterialEntity(
                 id = it.id, concept = it.concept, unit = it.unit,
                 anchor = it.anchor, detail = it.detail, tags = it.tags
+            )
+        }
+    }
+
+    private fun loadExplanations(context: Context): List<ExplanationEntity> {
+        val file = json.decodeFromString<ExplanationsFile>(
+            readAsset(context, "explanations.json")
+        )
+        return file.explanations.map {
+            ExplanationEntity(
+                id = "expl.${it.knowledgePointId}",
+                knowledgePointId = it.knowledgePointId,
+                type = "card",
+                source = "builtin",
+                title = it.title,
+                content = it.content,
+                illustration = it.illustration,
+                mediaUrl = null,
+                durationSec = 0
             )
         }
     }

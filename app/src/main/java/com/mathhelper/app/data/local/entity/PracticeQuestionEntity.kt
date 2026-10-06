@@ -13,5 +13,6 @@ data class PracticeQuestionEntity(
     val knowledgePointId: String,
     val content: String,
     val answer: String,
-    val options: List<String>
+    val options: List<String>,
+    val solution: String = ""
 )

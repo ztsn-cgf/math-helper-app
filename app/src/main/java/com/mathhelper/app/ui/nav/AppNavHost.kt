@@ -1,6 +1,7 @@
 package com.mathhelper.app.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,7 +15,10 @@ import com.mathhelper.app.ui.parent.ParentHomeScreen
 import com.mathhelper.app.ui.parent.PhotoEntryScreen
 import com.mathhelper.app.ui.parent.SettingsScreen
 import com.mathhelper.app.ui.student.LearnScreen
+import com.mathhelper.app.ui.student.LevelScreen
+import com.mathhelper.app.ui.student.RewardScreen
 import com.mathhelper.app.ui.student.StudentHomeScreen
+import com.mathhelper.app.util.PinManager
 
 object Routes {
     const val HOME = "home"
@@ -26,6 +30,8 @@ object Routes {
     const val STUDENT = "student"
     const val STUDY_BROWSE = "study_browse"
     const val SETTINGS = "settings"
+    const val REWARD = "reward"
+    const val LEVEL = "level"
     const val LEARN = "learn/{knowledgePointId}"
 
     fun learn(knowledgePointId: String) = "learn/$knowledgePointId"
@@ -38,9 +44,13 @@ fun AppNavHost() {
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
         composable(Routes.HOME) {
+            val context = LocalContext.current
             HomeScreen(
                 onParent = { navController.navigate(Routes.PARENT) },
-                onStudent = { navController.navigate(Routes.STUDENT) },
+                onStudent = {
+                    PinManager(context).clearUnlock()
+                    navController.navigate(Routes.STUDENT)
+                },
                 onKnowledgeTree = { navController.navigate(Routes.KNOWLEDGE_TREE) }
             )
         }
@@ -79,7 +89,16 @@ fun AppNavHost() {
             StudentHomeScreen(
                 onBack = { navController.popBackStack() },
                 onLearn = { kpId -> navController.navigate(Routes.learn(kpId)) },
-                onBrowse = { navController.navigate(Routes.STUDY_BROWSE) }
+                onBrowse = { navController.navigate(Routes.STUDY_BROWSE) },
+                onReward = { navController.navigate(Routes.REWARD) },
+                onLevel = { navController.navigate(Routes.LEVEL) }
+            )
+        }
+
+        composable(Routes.LEVEL) {
+            LevelScreen(
+                onBack = { navController.popBackStack() },
+                onLearn = { kpId -> navController.navigate(Routes.learn(kpId)) }
             )
         }
 
@@ -87,8 +106,14 @@ fun AppNavHost() {
             KnowledgeTreeScreen(
                 onBack = { navController.popBackStack() },
                 title = "自己学",
-                onTopicClick = { kpId -> navController.navigate(Routes.learn(kpId)) }
+                onTopicClick = { kpId -> navController.navigate(Routes.learn(kpId)) },
+                largeText = true,
+                showWeakness = true
             )
+        }
+
+        composable(Routes.REWARD) {
+            RewardScreen(onBack = { navController.popBackStack() })
         }
 
         composable(

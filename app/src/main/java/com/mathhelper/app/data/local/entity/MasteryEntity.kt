@@ -13,5 +13,8 @@ data class MasteryEntity(
     @PrimaryKey val knowledgePointId: String,
     val status: String,
     val correctStreak: Int,
+    val correctCount: Int = 0,
+    val wrongCount: Int = 0,
+    val nextReviewTime: Long = 0,
     val lastTestTime: Long
 )

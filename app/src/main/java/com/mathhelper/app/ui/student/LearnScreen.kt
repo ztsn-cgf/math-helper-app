@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +25,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -48,6 +53,10 @@ import com.mathhelper.app.data.local.entity.MisconceptionEntity
 import com.mathhelper.app.data.local.entity.PracticeQuestionEntity
 import com.mathhelper.app.data.local.entity.ReferenceMaterialEntity
 import com.mathhelper.app.ui.common.BackButton
+import com.mathhelper.app.ui.common.BigActionButton
+import com.mathhelper.app.ui.theme.StudentTheme
+import com.mathhelper.app.util.Encouragement
+import com.mathhelper.app.util.RewardStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,10 +66,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+/** 答对时的一次奖励事件，用于 UI 展示鼓励语 + 触发撒花。 */
+data class RewardEvent(val stars: Int, val phrase: String, val nonce: Int)
+
+private enum class LearnStep { LEARN, PRACTICE }
+
 class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidViewModel(app) {
 
     private val db = AppDatabase.getInstance(app)
     private val kpId = knowledgePointId
+    private val rewardStore = RewardStore(app)
 
     val kpName = db.knowledgePointDao().observeById(kpId)
         .map { it?.name ?: "" }
@@ -97,8 +112,17 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
     private val _generating = MutableStateFlow<String?>(null)
     val generating: StateFlow<String?> = _generating
 
-    fun generateQuestions() {
+    private val _rewardEvent = MutableStateFlow<RewardEvent?>(null)
+    val rewardEvent: StateFlow<RewardEvent?> = _rewardEvent
+    private var nonce = 0
+
+    fun clearReward() {
+        _rewardEvent.value = null
+    }
+
+    fun generateQuestions(clearFirst: Boolean = false) {
         viewModelScope.launch {
+            if (clearFirst) db.practiceQuestionDao().deleteForKnowledgePoint(kpId)
             val config = AiConfig.from(getApplication())
             if (!config.isConfigured) {
                 _generating.value = "请先在「家长模式 → AI 设置」填 DeepSeek key"
@@ -120,7 +144,8 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
                         knowledgePointId = kpId,
                         content = q.question,
                         answer = q.answer,
-                        options = q.options
+                        options = q.options,
+                        solution = q.solution
                     )
                 }
             )
@@ -135,14 +160,39 @@ class LearnViewModel(app: Application, val knowledgePointId: String) : AndroidVi
                 AttemptEntity(questionId = question.id, correct = correct, time = System.currentTimeMillis())
             )
             val prev = db.masteryDao().get(kpId)
+            val wasWrongBefore = (prev?.wrongCount ?: 0) > 0
             val streak = if (correct) (prev?.correctStreak ?: 0) + 1 else 0
+            val correctCount = (prev?.correctCount ?: 0) + if (correct) 1 else 0
+            val wrongCount = (prev?.wrongCount ?: 0) + if (correct) 0 else 1
             val status = when {
                 streak >= 3 -> "mastered"
                 streak >= 2 -> "consolidating"
                 else -> "weak"
             }
-            db.masteryDao().upsert(MasteryEntity(kpId, status, streak, System.currentTimeMillis()))
-            val msg = if (correct) "✅ 答对啦！" else "❌ 再想想～正确答案：${question.answer}"
+            // 间隔复习：错了马上复习；做对按 3 天、7 天逐步拉长；掌握后不再复习
+            val day = 24L * 60 * 60 * 1000
+            val nextReview = when {
+                !correct -> 0L
+                streak == 1 -> System.currentTimeMillis() + 3 * day
+                streak == 2 -> System.currentTimeMillis() + 7 * day
+                else -> Long.MAX_VALUE
+            }
+            db.masteryDao().upsert(MasteryEntity(kpId, status, streak, correctCount, wrongCount, nextReview, System.currentTimeMillis()))
+            val msg = if (correct) {
+                if (wasWrongBefore) {
+                    val stars = rewardStore.addStars(2)
+                    nonce++
+                    _rewardEvent.value = RewardEvent(stars, "${rewardStore.childName.value}，以前错过的知识点这次做对了，太棒了！🎉", nonce)
+                    "✅ 做对了！以前错过的，这次掌握啦！"
+                } else {
+                    val stars = rewardStore.addStar()
+                    nonce++
+                    _rewardEvent.value = RewardEvent(stars, Encouragement.random(rewardStore.childName.value), nonce)
+                    "✅ 答对啦！"
+                }
+            } else {
+                "❌ 再想想～看看下面的解题思路，再试一次"
+            }
             _feedbackMap.value = _feedbackMap.value + (question.id to msg)
         }
     }
@@ -190,7 +240,10 @@ fun LearnScreen(
     val questions by vm.questions.collectAsState()
     val feedbackMap by vm.feedbackMap.collectAsState()
     val generating by vm.generating.collectAsState()
+    val rewardEvent by vm.rewardEvent.collectAsState()
 
+    var step by remember { mutableStateOf(LearnStep.LEARN) }
+    var index by remember { mutableStateOf(0) }
     var answers by remember { mutableStateOf(mapOf<String, String>()) }
 
     val motionMode = when {
@@ -208,88 +261,172 @@ fun LearnScreen(
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        StudentTheme {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.TopCenter
             ) {
-                motionMode?.let { mode ->
-                    item {
-                        Card {
-                            Column(Modifier.padding(16.dp)) {
-                                Text("动一动看看", style = MaterialTheme.typography.titleMedium)
-                                MotionDemo(mode)
+                when (step) {
+                    LearnStep.LEARN -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp),
+                            contentPadding = PaddingValues(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            motionMode?.let { mode ->
+                                item {
+                                    Card {
+                                        Column(Modifier.padding(20.dp)) {
+                                            Text("动一动看看", style = MaterialTheme.typography.titleMedium)
+                                            MotionDemo(mode)
+                                        }
+                                    }
+                                }
+                            }
+
+                            explanation?.let { ex ->
+                                item { ExplanationCard(ex) }
+                            }
+
+                            if (referenceMaterials.isNotEmpty()) {
+                                item {
+                                    Text("量感锚点", style = MaterialTheme.typography.titleMedium)
+                                }
+                                items(referenceMaterials, key = { it.id }) { mat ->
+                                    ReferenceMaterialCard(mat)
+                                }
+                            }
+
+                            if (misconceptions.isNotEmpty()) {
+                                item {
+                                    Text("容易搞错的地方", style = MaterialTheme.typography.titleMedium)
+                                }
+                                items(misconceptions, key = { it.id }) { m ->
+                                    MisconceptionCard(m)
+                                }
+                            }
+
+                            item {
+                                if (questions.isNotEmpty()) {
+                                    BigActionButton(
+                                        text = "开始练习 →",
+                                        onClick = {
+                                            index = 0
+                                            step = LearnStep.PRACTICE
+                                        }
+                                    )
+                                    TextButton(
+                                        onClick = { vm.generateQuestions(clearFirst = true) },
+                                        enabled = generating == null,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(if (generating != null) "正在出题…" else "换一批新题")
+                                    }
+                                } else {
+                                    val gen = generating
+                                    if (gen != null) {
+                                        Text(
+                                            gen,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    } else {
+                                        Text(
+                                            "这里还没有练习题，先自动出几道：",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        BigActionButton(
+                                            text = "出几道题练练",
+                                            onClick = { vm.generateQuestions() }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    LearnStep.PRACTICE -> {
+                        val q = questions.getOrNull(index)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 720.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            if (q == null) {
+                                Text(
+                                    "这里还没有练习题哦",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Button(onClick = { step = LearnStep.LEARN }) {
+                                    Text("返回")
+                                }
+                            } else {
+                                Text(
+                                    "第 ${index + 1} / ${questions.size} 题",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                QuestionCard(
+                                    question = q,
+                                    answer = answers[q.id] ?: "",
+                                    onAnswerChange = { answers = answers + (q.id to it) },
+                                    onOptionSelect = { opt -> vm.submitAnswer(q, opt) },
+                                    feedback = feedbackMap[q.id],
+                                    onSubmit = { vm.submitAnswer(q, answers[q.id] ?: "") }
+                                )
+                                rewardEvent?.let { ev ->
+                                    Text(
+                                        ev.phrase,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            if (index > 0) {
+                                                index--
+                                                vm.clearReward()
+                                            }
+                                        },
+                                        enabled = index > 0,
+                                        modifier = Modifier.weight(1f).height(56.dp)
+                                    ) { Text("上一题") }
+
+                                    if (index < questions.size - 1) {
+                                        Button(
+                                            onClick = {
+                                                index++
+                                                vm.clearReward()
+                                            },
+                                            modifier = Modifier.weight(1f).height(56.dp)
+                                        ) { Text("下一题") }
+                                    } else {
+                                        Button(
+                                            onClick = {
+                                                step = LearnStep.LEARN
+                                                vm.clearReward()
+                                            },
+                                            modifier = Modifier.weight(1f).height(56.dp)
+                                        ) { Text("完成 🎉") }
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                explanation?.let { ex ->
-                    item {
-                        ExplanationCard(ex)
-                    }
-                }
-
-                if (referenceMaterials.isNotEmpty()) {
-                    item {
-                        Text("量感锚点", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(referenceMaterials, key = { it.id }) { mat ->
-                        ReferenceMaterialCard(mat)
-                    }
-                }
-
-                if (misconceptions.isNotEmpty()) {
-                    item {
-                        Text("容易搞错的地方", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(misconceptions, key = { it.id }) { m ->
-                        MisconceptionCard(m)
-                    }
-                }
-
-                item {
-                    Text("练一练", style = MaterialTheme.typography.titleMedium)
-                }
-
-                if (questions.isEmpty()) {
-                    item {
-                        val gen = generating
-                        if (gen != null) {
-                            Text(
-                                gen,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Text(
-                                "这里还没有练习题，可以自动出几道：",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Button(
-                                onClick = { vm.generateQuestions() },
-                                modifier = Modifier.padding(top = 8.dp)
-                            ) {
-                                Text("出几道题练练")
-                            }
-                        }
-                    }
-                }
-
-                items(questions, key = { it.id }) { q ->
-                    QuestionCard(
-                        question = q,
-                        answer = answers[q.id] ?: "",
-                        onAnswerChange = { answers = answers + (q.id to it) },
-                        feedback = feedbackMap[q.id],
-                        onSubmit = { vm.submitAnswer(q, answers[q.id] ?: "") }
-                    )
-                }
+                rewardEvent?.let { ev -> StarBurst(trigger = ev.nonce) }
             }
         }
     }
@@ -300,8 +437,14 @@ private fun ExplanationCard(explanation: ExplanationEntity) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text("先听讲解", style = MaterialTheme.typography.titleMedium)
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                explanation.title.ifBlank { "先听讲解" },
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (explanation.illustration.isNotBlank()) {
+                VisualIllustration(explanation.illustration, explanation.knowledgePointId)
+            }
             Text(
                 explanation.content,
                 style = MaterialTheme.typography.bodyLarge,
@@ -314,7 +457,7 @@ private fun ExplanationCard(explanation: ExplanationEntity) {
 @Composable
 private fun ReferenceMaterialCard(material: ReferenceMaterialEntity) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(20.dp)) {
             Text(material.unit, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Text(material.anchor, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 4.dp))
             if (material.detail.isNotBlank()) {
@@ -332,7 +475,7 @@ private fun ReferenceMaterialCard(material: ReferenceMaterialEntity) {
 @Composable
 private fun MisconceptionCard(misconception: MisconceptionEntity) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(20.dp)) {
             Text(
                 misconception.concept,
                 style = MaterialTheme.typography.titleMedium,
@@ -357,38 +500,66 @@ private fun QuestionCard(
     question: PracticeQuestionEntity,
     answer: String,
     onAnswerChange: (String) -> Unit,
+    onOptionSelect: (String) -> Unit,
     feedback: String?,
     onSubmit: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Text(question.content, style = MaterialTheme.typography.bodyLarge)
+        Column(Modifier.padding(20.dp)) {
+            Text(question.content, style = MaterialTheme.typography.titleMedium)
             if (question.options.isNotEmpty()) {
-                Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                // 选择题：点选项即作答，不显示自由输入框
+                Column(
+                    Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     question.options.forEach { opt ->
-                        OutlinedButton(onClick = { onAnswerChange(opt) }, modifier = Modifier.fillMaxWidth()) {
-                            Text(opt)
+                        OutlinedButton(
+                            onClick = { onOptionSelect(opt) },
+                            modifier = Modifier.fillMaxWidth().height(52.dp)
+                        ) {
+                            Text(opt, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
-            }
-            OutlinedTextField(
-                value = answer,
-                onValueChange = onAnswerChange,
-                label = { Text("答案") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            )
-            Button(onClick = onSubmit, modifier = Modifier.padding(top = 8.dp)) {
-                Text("检查")
+            } else {
+                OutlinedTextField(
+                    value = answer,
+                    onValueChange = onAnswerChange,
+                    label = { Text("答案", style = MaterialTheme.typography.bodyLarge) },
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                )
+                Button(
+                    onClick = onSubmit,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp).height(56.dp)
+                ) {
+                    Text("检查", style = MaterialTheme.typography.titleMedium)
+                }
             }
             feedback?.let {
                 Text(
                     it,
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (it.startsWith("✅")) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 )
+            }
+            if (feedback != null && question.solution.isNotBlank()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("解题思路", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            question.solution,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }

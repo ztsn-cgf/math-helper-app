@@ -10,24 +10,23 @@ import androidx.core.content.ContextCompat
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -47,30 +47,26 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.common.InputImage
 import com.mathhelper.app.ai.AiConfig
-import com.mathhelper.app.ai.AttributionResult
 import com.mathhelper.app.ai.AttributionService
 import com.mathhelper.app.ai.DeepSeekClient
+import com.mathhelper.app.ai.QuestionAnalysis
 import com.mathhelper.app.data.local.AppDatabase
-import com.mathhelper.app.data.local.entity.ExplanationEntity
-import com.mathhelper.app.data.local.entity.KnowledgePointEntity
 import com.mathhelper.app.data.local.entity.MasteryEntity
 import com.mathhelper.app.data.local.entity.MistakeEntity
-import com.mathhelper.app.data.local.entity.PracticeQuestionEntity
 import com.mathhelper.app.ocr.MlKitOcrEngine
 import com.mathhelper.app.ui.common.BackButton
 import com.mathhelper.app.ui.common.BigActionButton
 import com.mathhelper.app.util.ImageStore
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 data class PhotoEntryUiState(
     val processing: Boolean = false,
+    val analyzing: Boolean = false,
     val ocrText: String = "",
-    val attribution: AttributionResult? = null,
+    val questions: List<QuestionAnalysis> = emptyList(),
     val error: String? = null,
     val aiConfigured: Boolean = false,
     val saved: Boolean = false
@@ -79,20 +75,14 @@ data class PhotoEntryUiState(
 class PhotoEntryViewModel(app: Application) : AndroidViewModel(app) {
 
     private val db = AppDatabase.getInstance(app)
-    private val knowledgePointDao = db.knowledgePointDao()
     private val mistakeDao = db.mistakeDao()
-    private val explanationDao = db.explanationDao()
-    private val practiceQuestionDao = db.practiceQuestionDao()
     private val masteryDao = db.masteryDao()
     private val ocr = MlKitOcrEngine()
 
     private val aiConfig = AiConfig.from(app)
     private val attributionService: AttributionService? =
-        if (aiConfig.isConfigured) AttributionService(DeepSeekClient(aiConfig), knowledgePointDao)
+        if (aiConfig.isConfigured) AttributionService(DeepSeekClient(aiConfig), db.knowledgePointDao())
         else null
-
-    val topics = knowledgePointDao.observeTopics()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _uiState = MutableStateFlow(PhotoEntryUiState(aiConfigured = aiConfig.isConfigured))
     val uiState: StateFlow<PhotoEntryUiState> = _uiState
@@ -101,71 +91,45 @@ class PhotoEntryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onImage(context: Context, bitmap: Bitmap) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(processing = true, error = null, ocrText = "", attribution = null)
+            _uiState.value = _uiState.value.copy(processing = true, analyzing = false, error = null, ocrText = "", questions = emptyList())
             imagePath = ImageStore.save(context, bitmap)
             val text = ocr.recognize(InputImage.fromBitmap(bitmap, 0))
             _uiState.value = _uiState.value.copy(processing = false, ocrText = text)
 
             if (attributionService != null && text.isNotBlank()) {
-                runCatching { attributionService.attribute(text) }
-                    .onSuccess { result -> _uiState.value = _uiState.value.copy(attribution = result) }
-                    .onFailure { e -> _uiState.value = _uiState.value.copy(error = "AI 归因失败：${e.message}") }
+                _uiState.value = _uiState.value.copy(analyzing = true)
+                runCatching { attributionService.analyzePage(text) }
+                    .onSuccess { qs -> _uiState.value = _uiState.value.copy(questions = qs, analyzing = false) }
+                    .onFailure { e -> _uiState.value = _uiState.value.copy(error = "AI 归因失败：${e.message}", analyzing = false) }
             }
         }
-    }
-
-    fun updateOcrText(text: String) {
-        _uiState.value = _uiState.value.copy(ocrText = text)
     }
 
     fun setError(message: String) {
         _uiState.value = _uiState.value.copy(error = message)
     }
 
-    fun save(selectedKpId: String) {
+    /** 保存勾选为「做错」的题目，每题一条错题记录。 */
+    fun save(wrongQuestions: List<QuestionAnalysis>) {
         viewModelScope.launch {
-            val attribution = _uiState.value.attribution
             val ocrText = _uiState.value.ocrText
-            val kpId = selectedKpId.ifBlank { attribution?.knowledgePointId.orEmpty() }
-            val mistakeId = UUID.randomUUID().toString()
-
-            mistakeDao.insert(
-                MistakeEntity(
-                    id = mistakeId,
-                    imagePath = imagePath,
-                    ocrText = ocrText,
-                    knowledgePointId = kpId.ifBlank { null },
-                    mistakeType = attribution?.misconception ?: "",
-                    createTime = System.currentTimeMillis()
+            wrongQuestions.forEach { q ->
+                val mistakeId = UUID.randomUUID().toString()
+                mistakeDao.insert(
+                    MistakeEntity(
+                        id = mistakeId,
+                        imagePath = imagePath,
+                        ocrText = q.question.ifBlank { ocrText },
+                        knowledgePointId = q.knowledgePointId.ifBlank { null },
+                        mistakeType = q.misconception,
+                        severity = q.severity.ifBlank { "high" },
+                        createTime = System.currentTimeMillis()
+                    )
                 )
-            )
-
-            if (kpId.isNotBlank() && attribution != null) {
-                if (attribution.explanation.isNotBlank()) {
-                    explanationDao.insert(
-                        ExplanationEntity(
-                            id = "ai.$kpId",
-                            knowledgePointId = kpId,
-                            type = "text",
-                            source = "ai",
-                            title = attribution.knowledgePointName.ifBlank { kpId },
-                            content = attribution.explanation,
-                            mediaUrl = null,
-                            durationSec = 0
-                        )
-                    )
+                // 高等级 → 重点巩固（weak）；低等级（涂改后对）只记错题，不强制变弱
+                if (q.knowledgePointId.isNotBlank() && q.severity != "low") {
+                    masteryDao.upsert(MasteryEntity(q.knowledgePointId, "weak", 0, 0, 0, 0, System.currentTimeMillis()))
                 }
-                val questions = attribution.practiceQuestions.mapIndexed { i, q ->
-                    PracticeQuestionEntity(
-                        id = "q.$kpId.$mistakeId.$i",
-                        knowledgePointId = kpId,
-                        content = q.question,
-                        answer = q.answer,
-                        options = q.options
-                    )
-                }
-                if (questions.isNotEmpty()) practiceQuestionDao.insertAll(questions)
-                masteryDao.upsert(MasteryEntity(kpId, "weak", 0, System.currentTimeMillis()))
             }
             _uiState.value = _uiState.value.copy(saved = true)
         }
@@ -180,11 +144,9 @@ fun PhotoEntryScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val topics by viewModel.topics.collectAsState()
 
     var previewBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var manualKpId by remember { mutableStateOf<String?>(null) }
-    var kpMenuExpanded by remember { mutableStateOf(false) }
+    var questions by remember { mutableStateOf<List<QuestionAnalysis>>(emptyList()) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
@@ -210,14 +172,14 @@ fun PhotoEntryScreen(
         }
     }
 
-    val effectiveKpId = manualKpId ?: uiState.attribution?.knowledgePointId
-    val effectiveKpName = topics.firstOrNull { it.id == effectiveKpId }?.name
-        ?: uiState.attribution?.knowledgePointName
-        ?: "选择知识点"
-
+    LaunchedEffect(uiState.questions) {
+        questions = uiState.questions
+    }
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) onBack()
     }
+
+    val wrongCount = questions.count { it.isWrong }
 
     Scaffold(
         topBar = {
@@ -254,19 +216,20 @@ fun PhotoEntryScreen(
                                 )
                             }
                         )
+                        Text(
+                            "可以拍一整页作业/试卷，AI 会自动拆分成题目、判断对错，只把做错的存成错题。",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         if (!uiState.aiConfigured) {
                             Text(
-                                "未配置 AI（secrets.properties），将跳过自动归因，可手动选知识点。",
+                                "未配置 AI（secrets.properties），将跳过自动识别。",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         uiState.error?.let { err ->
-                            Text(
-                                err,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
+                            Text(err, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -282,63 +245,92 @@ fun PhotoEntryScreen(
                     }
                 }
                 if (uiState.processing) {
-                    item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+                    item {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        Text(
+                            "正在识别文字…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else if (uiState.analyzing) {
+                    item {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        Text(
+                            "AI 正在拆分题目、判断对错…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
                 uiState.error?.let { err ->
                     item {
                         Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                item {
-                    OutlinedTextField(
-                        value = uiState.ocrText,
-                        onValueChange = { viewModel.updateOcrText(it) },
-                        label = { Text("识别文字（可修改）") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                item {
-                    Box {
-                        OutlinedButton(onClick = { kpMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text(effectiveKpName)
-                        }
-                        DropdownMenu(expanded = kpMenuExpanded, onDismissRequest = { kpMenuExpanded = false }) {
-                            topics.forEach { t: KnowledgePointEntity ->
-                                DropdownMenuItem(
-                                    text = { Text(t.name) },
-                                    onClick = { manualKpId = t.id; kpMenuExpanded = false }
+                if (questions.isNotEmpty()) {
+                    item {
+                        Text(
+                            "识别出 ${questions.size} 道题，勾选做错的（$wrongCount 道）；点徽标可切「重点/轻微」",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    itemsIndexed(questions) { index, q ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = q.isWrong,
+                                    onCheckedChange = {
+                                        questions = questions.mapIndexed { i, item ->
+                                            if (i == index) item.copy(isWrong = it) else item
+                                        }
+                                    }
                                 )
-                            }
-                        }
-                    }
-                }
-                uiState.attribution?.let { attr ->
-                    if (attr.misconception.isNotBlank()) {
-                        item {
-                            Card {
-                                Column(Modifier.padding(12.dp)) {
-                                    Text("可能的误区", style = MaterialTheme.typography.titleMedium)
-                                    Text(attr.misconception, style = MaterialTheme.typography.bodyMedium)
+                                Column(Modifier.weight(1f)) {
+                                    Text(q.question, style = MaterialTheme.typography.bodyLarge)
+                                    if (q.isWrong) {
+                                        val high = q.severity != "low"
+                                        Text(
+                                            text = if (high) "🔴 重点巩固 · ${q.mark.ifBlank { "做错" }}" else "🟡 轻微 · 后续加练 · ${q.mark.ifBlank { "涂改后对" }}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (high) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.clickable {
+                                                questions = questions.mapIndexed { i, item ->
+                                                    if (i == index) item.copy(severity = if (high) "low" else "high") else item
+                                                }
+                                            }
+                                        )
+                                    }
+                                    if (q.isWrong && q.knowledgePointName.isNotBlank()) {
+                                        Text(
+                                            "知识点：${q.knowledgePointName}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                    if (attr.explanation.isNotBlank()) {
-                        item {
-                            Card {
-                                Column(Modifier.padding(12.dp)) {
-                                    Text("短讲解", style = MaterialTheme.typography.titleMedium)
-                                    Text(attr.explanation, style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        }
+                } else if (!uiState.processing && !uiState.analyzing) {
+                    item {
+                        Text(
+                            "没有识别出题目，请重拍或换一张更清晰的照片。",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-                item {
-                    BigActionButton(
-                        "保存错题",
-                        onClick = { viewModel.save(effectiveKpId ?: "") }
-                    )
+                if (questions.isNotEmpty()) {
+                    item {
+                        BigActionButton(
+                            "保存 $wrongCount 道错题",
+                            onClick = { viewModel.save(questions.filter { it.isWrong }) }
+                        )
+                    }
                 }
             }
         }

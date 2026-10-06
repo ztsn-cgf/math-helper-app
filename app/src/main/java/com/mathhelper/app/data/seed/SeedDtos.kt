@@ -56,3 +56,14 @@ data class ReferenceMaterialDto(
     val detail: String = "",
     val tags: List<String> = emptyList()
 )
+
+@Serializable
+data class ExplanationsFile(val explanations: List<ExplanationDto>)
+
+@Serializable
+data class ExplanationDto(
+    val knowledgePointId: String,
+    val illustration: String = "",
+    val title: String,
+    val content: String
+)

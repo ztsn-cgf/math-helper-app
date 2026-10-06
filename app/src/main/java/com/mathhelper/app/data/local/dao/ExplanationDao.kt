@@ -15,4 +15,7 @@ interface ExplanationDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(explanation: ExplanationEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(explanations: List<ExplanationEntity>)
 }

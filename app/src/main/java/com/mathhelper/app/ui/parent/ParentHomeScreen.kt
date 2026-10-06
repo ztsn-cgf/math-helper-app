@@ -43,9 +43,11 @@ fun ParentHomeScreen(
     onMasteryMap: () -> Unit,
     onSettings: () -> Unit
 ) {
-    var unlocked by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pinManager = remember { PinManager(context) }
+    var unlocked by remember { mutableStateOf(pinManager.isUnlocked()) }
     if (!unlocked) {
-        PinGate(onUnlock = { unlocked = true }, onBack = onBack)
+        PinGate(onUnlock = { pinManager.unlock(10); unlocked = true }, onBack = onBack)
     } else {
         ParentContent(
             onBack = onBack,

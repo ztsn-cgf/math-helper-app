@@ -1,0 +1,71 @@
+{
+  "schema": "explanations/v1",
+  "description": "每个知识点一条「绘本讲解」：illustration 决定画什么插画，title/content 用三年级孩子能懂的话讲概念。",
+  "explanations": [
+    { "knowledgePointId": "kp.len.units", "illustration": "anchor", "title": "认一认长度单位", "content": "毫米最细，像身份证边那么薄；厘米像指甲盖那么宽；分米像拳头那么宽；米像门把手那么高；千米要走操场两圈半那么远。" },
+    { "knowledgePointId": "kp.len.rate", "illustration": "anchor", "title": "长度单位怎么换", "content": "毫米→厘米→分米→米，每换一个大一级的单位就 ÷10；反过来 ×10。1 米 = 10 分米 = 100 厘米 = 1000 毫米。" },
+    { "knowledgePointId": "kp.len.estimate", "illustration": "anchor", "title": "估一估有多长", "content": "先想一个参照物：指甲盖宽约 1 厘米，门把手高约 1 米，再看这个物体大概有几个参照物那么长。" },
+    { "knowledgePointId": "kp.len.choose", "illustration": "anchor", "title": "该用哪个单位", "content": "铅笔用厘米，课桌用分米，教室用米，城市之间用千米。先想东西有多大，再选单位。" },
+
+    { "knowledgePointId": "kp.mass.units", "illustration": "anchor", "title": "认一认重量单位", "content": "一枚回形针大约 1 克；两瓶矿泉水大约 1 千克；一头奶牛大约 1 吨。越往后面越重。" },
+    { "knowledgePointId": "kp.mass.rate", "illustration": "anchor", "title": "重量单位怎么换", "content": "重量是「千进制」：1 吨 = 1000 千克，1 千克 = 1000 克。都乘或除以 1000。" },
+    { "knowledgePointId": "kp.mass.estimate", "illustration": "anchor", "title": "估一估有多重", "content": "先想参照物：1 克像回形针，1 千克像两瓶水，1 吨像一头奶牛，再看它大概有几个那么重。" },
+    { "knowledgePointId": "kp.mass.choose", "illustration": "anchor", "title": "该用哪个单位", "content": "糖果用克，大米用千克，汽车用吨。小东西用克，大东西用吨。" },
+
+    { "knowledgePointId": "kp.time.hms", "illustration": "anchor", "title": "认一认时间", "content": "眨一下眼大约 1 秒；1 分钟心跳大约 70 次；1 小时差不多上一节课。秒短、时久。" },
+    { "knowledgePointId": "kp.time.ymd", "illustration": "anchor", "title": "认一认年月日", "content": "一年有 12 个月；大月 31 天，小月 30 天，2 月特别短只有 28 或 29 天。" },
+    { "knowledgePointId": "kp.time.24h", "illustration": "anchor", "title": "下午几点的另一种说法", "content": "过了中午 12 点，就把钟面上的时间加 12：下午 3 点就是 15 点，晚上 8 点就是 20 点。" },
+    { "knowledgePointId": "kp.time.elapsed", "illustration": "anchor", "title": "过了多长时间", "content": "1 小时 = 60 分钟，1 分钟 = 60 秒。算「经过了多久」就用结束时间减去开始时间。" },
+
+    { "knowledgePointId": "kp.peri.concept", "illustration": "perimeter-walk", "title": "周长是绕一圈", "content": "周长就是绕着图形的边线走一圈，一共走了多长。看那个小圆点，它走的一整圈就是周长。" },
+    { "knowledgePointId": "kp.peri.rect", "illustration": "rect", "title": "长方形和正方形的周长", "content": "长方形有两条长、两条宽，周长 =（长＋宽）×2。正方形四条边一样长，周长 = 边长 ×4。" },
+
+    { "knowledgePointId": "kp.area.units", "illustration": "area-grid", "title": "面积是铺小方格", "content": "面积就是图形里面能铺几个小方格。1 平方厘米差不多是拇指指甲盖那么大。" },
+    { "knowledgePointId": "kp.area.rate", "illustration": "area-grid", "title": "面积单位怎么换", "content": "相邻面积单位进率是 100：1 平方米 = 100 平方分米，1 平方分米 = 100 平方厘米。" },
+    { "knowledgePointId": "kp.area.rect", "illustration": "area-grid", "title": "长方形和正方形的面积", "content": "长方形面积 = 长 × 宽；正方形面积 = 边长 × 边长。看下面的小方格，一排几个、一共几排，乘起来就是面积。" },
+    { "knowledgePointId": "kp.area.estimate", "illustration": "area-grid", "title": "估一估有多大", "content": "先想 1 平方厘米、1 平方米有多大，再看这个面大概能铺几个，就知道大约多大了。" },
+
+    { "knowledgePointId": "kp.pa.lineface", "illustration": "line-vs-face", "title": "周长是线、面积是面", "content": "周长是绕着边的一圈「线」，像给花坛围篱笆；面积是里面铺满的「面」，像给地面铺瓷砖。一个看边，一个看里。" },
+    { "knowledgePointId": "kp.pa.unit", "illustration": "line-vs-face", "title": "厘米还是平方厘米", "content": "量长度用「厘米」，量面积用「平方厘米」。名字里带「平方」的，都是量「面」用的。" },
+
+    { "knowledgePointId": "kp.views.dir", "illustration": "cube-views", "title": "从不同方向看", "content": "同一个物体，从前面、上面、侧面看，看到的形状可能不一样。换个方向，样子就变了。" },
+    { "knowledgePointId": "kp.views.cube", "illustration": "cube-views", "title": "三个方向看立体", "content": "用小正方体搭成的立体，从前面、上面、侧面三个方向看，把每个方向看到的样子画下来。" },
+
+    { "knowledgePointId": "kp.motion.sym", "illustration": "motion", "title": "对折能重合", "content": "沿一条直线对折，两边完全重合，就是轴对称图形。下面的三角形对折给你看。" },
+    { "knowledgePointId": "kp.motion.trans", "illustration": "motion", "title": "直直地滑过去", "content": "平移就是图形直直地滑过去，不转弯、不变形、不翻面。电梯、抽屉都是平移。" },
+    { "knowledgePointId": "kp.motion.rotate", "illustration": "motion", "title": "绕着一个点转", "content": "旋转是绕着一个固定的点转圈，风车、钟表指针都在旋转。" },
+
+    { "knowledgePointId": "kp.unfold.net", "illustration": "cube-net", "title": "剪开摊平", "content": "把立体图形剪开、摊平，就是「展开图」。一个正方体剪开后有 6 个面连在一起。" },
+    { "knowledgePointId": "kp.unfold.fold", "illustration": "cube-net", "title": "折起来变立体", "content": "把展开图照着边折起来，就能变成一个立体图形。下面这张「十字」折起来就是一个正方体。" },
+
+    { "knowledgePointId": "kp.mixed.muladd", "illustration": "steps", "title": "先算乘法", "content": "一道算式里又有乘法又有加法（或减法），要先算乘法，再算加减。先算的那一步画个圈提醒自己。" },
+    { "knowledgePointId": "kp.mixed.divadd", "illustration": "steps", "title": "先算除法", "content": "有除法又有加法（或减法），先算除法，再算加减。" },
+    { "knowledgePointId": "kp.mixed.paren", "illustration": "steps", "title": "先算括号里的", "content": "有小括号的要先算括号里的。括号最优先，看到括号先算它。" },
+    { "knowledgePointId": "kp.mixed.order", "illustration": "steps", "title": "先乘除后加减", "content": "没有括号时，先算乘法和除法，再算加法和减法。有小括号就先算括号里的。" },
+
+    { "knowledgePointId": "kp.addsub.3digit", "illustration": "number-line", "title": "三位数加减", "content": "数位要对齐，从个位算起；满十就进一，不够就向前借一。可以在数轴上跳着看。" },
+    { "knowledgePointId": "kp.addsub.odo", "illustration": "number-line", "title": "里程表问题", "content": "里程表上的数一直在变大。用「后来的读数」减去「开始的读数」，就是这段路走了多远。" },
+
+    { "knowledgePointId": "kp.multdiv.round", "illustration": "array", "title": "整十整百口算", "content": "先不看 0，算 0 前面的数；算完再在得数后面把 0 补回来。比如 20×3，先算 2×3=6，再补一个 0 得 60。" },
+    { "knowledgePointId": "kp.multdiv.2x1", "illustration": "array", "title": "两位数乘一位数", "content": "把两位数拆成「整十 + 个位」，分别乘，再把结果加起来。下面的点阵就是「几组几个」。" },
+
+    { "knowledgePointId": "kp.multiply.2x1", "illustration": "array", "title": "乘法（含进位）", "content": "从个位乘起，满十就进一，别忘了把进上来的数加到下一位。" },
+    { "knowledgePointId": "kp.multiply.zero", "illustration": "array", "title": "0 乘任何数", "content": "0 乘任何数都得 0。因为「0 组」或「每组 0 个」，都是 0 个。" },
+    { "knowledgePointId": "kp.multiply.2x2", "illustration": "array", "title": "两位数乘两位数", "content": "先用个位乘一遍，再用十位乘一遍（结果往左错一位），最后把两遍加起来。" },
+    { "knowledgePointId": "kp.multiply.chain", "illustration": "array", "title": "连乘", "content": "连乘就从左往右一个一个乘；如果能先凑成整十、整百，可以先乘它们，算得更快。" },
+
+    { "knowledgePointId": "kp.divide.2x1", "illustration": "sharing", "title": "除法（分一分）", "content": "除法就是「平均分」。从最高位除起，除到哪一位，商就写在哪一位上面。" },
+    { "knowledgePointId": "kp.divide.mid0", "illustration": "sharing", "title": "商里的 0", "content": "除到哪一位不够商 1，就在那一位写 0 占位。0 不能少，少了数就变了。" },
+    { "knowledgePointId": "kp.divide.zero", "illustration": "sharing", "title": "0 除以几", "content": "0 除以任何不是 0 的数都得 0（0 个东西分给谁都是 0 个）。但谁也不能除以 0。" },
+    { "knowledgePointId": "kp.divide.check", "illustration": "sharing", "title": "除法验算", "content": "用「商 × 除数」算一算，看是不是等于被除数。等于就对了，不等于就再算一遍。" },
+
+    { "knowledgePointId": "kp.decimal.read", "illustration": "number-line-decimal", "title": "认一认小数", "content": "3.5 读作「三点五」。小数点左边是整数部分，右边是小数部分。3.5 米就是 3 米再加 5 分米。" },
+    { "knowledgePointId": "kp.decimal.compare", "illustration": "number-line-decimal", "title": "小数比大小", "content": "先比整数部分，整数部分大的就大；整数一样再比小数部分。看数轴上谁在右边谁就大。" },
+
+    { "knowledgePointId": "kp.fraction.read", "illustration": "fraction", "title": "认一认分数", "content": "把一块饼平均分成几份，取其中的几份，就是「几分之几」。下面的饼分给你看。" },
+    { "knowledgePointId": "kp.fraction.compare", "illustration": "fraction", "title": "分数比大小", "content": "分子一样时，分母越大、分得越细、每份越小，分数反而越小。比如 1/3 比 1/2 小。" },
+
+    { "knowledgePointId": "kp.data.collect", "illustration": "bar-chart", "title": "收集数据", "content": "用画「正」字、打钩等方法，把数据一个一个记下来，别漏掉也别重复。" },
+    { "knowledgePointId": "kp.data.table", "illustration": "bar-chart", "title": "用图表示数据", "content": "把数据画成条形图或表格，谁高谁低一眼就能看出来。" }
+  ]
+}

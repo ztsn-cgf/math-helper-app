@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-data class MasteryRow(val name: String, val status: String)
+data class MasteryRow(val name: String, val status: String, val correct: Int, val wrong: Int)
 
 class MasteryMapViewModel(app: Application) : AndroidViewModel(app) {
     private val db = AppDatabase.getInstance(app)
@@ -46,7 +46,10 @@ class MasteryMapViewModel(app: Application) : AndroidViewModel(app) {
         db.masteryDao().observeAll()
     ) { topics, masteries ->
         val byKp = masteries.associateBy { it.knowledgePointId }
-        topics.map { t -> MasteryRow(t.name, byKp[t.id]?.status ?: "new") }
+        topics.map { t ->
+            val m = byKp[t.id]
+            MasteryRow(t.name, m?.status ?: "new", m?.correctCount ?: 0, m?.wrongCount ?: 0)
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
 
@@ -92,14 +95,20 @@ private fun MasteryRowCard(row: MasteryRow) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(row.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .background(color, CircleShape)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(label, style = MaterialTheme.typography.labelLarge, color = Color.White)
-                }
+            if (row.correct > 0 || row.wrong > 0) {
+                Text(
+                    "✓ ${row.correct}  ✗ ${row.wrong}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
+            }
+            Box(
+                Modifier
+                    .background(color, CircleShape)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(label, style = MaterialTheme.typography.labelLarge, color = Color.White)
             }
         }
     }

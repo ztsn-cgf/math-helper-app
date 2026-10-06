@@ -15,6 +15,7 @@ data class ExplanationEntity(
     val source: String,      // external | ai | builtin
     val title: String,
     val content: String,
+    val illustration: String = "",   // 插画类型（见 explanations.json），空串=纯文字
     val mediaUrl: String?,
     val durationSec: Int
 )

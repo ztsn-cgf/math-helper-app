@@ -18,4 +18,7 @@ interface PracticeQuestionDao {
 
     @Query("SELECT COUNT(*) FROM practice_questions WHERE knowledgePointId = :kpId")
     suspend fun countFor(kpId: String): Int
+
+    @Query("DELETE FROM practice_questions WHERE knowledgePointId = :kpId")
+    suspend fun deleteForKnowledgePoint(kpId: String)
 }

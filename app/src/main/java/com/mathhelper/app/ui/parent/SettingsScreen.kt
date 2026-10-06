@@ -23,13 +23,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mathhelper.app.ai.AiConfig
 import com.mathhelper.app.ui.common.BackButton
+import com.mathhelper.app.util.RewardStore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val rewardStore = remember { RewardStore(context) }
     var apiKey by remember { mutableStateOf(AiConfig.currentApiKey(context)) }
     var saved by remember { mutableStateOf(false) }
+    var childName by remember { mutableStateOf(rewardStore.childName.value) }
+    var nameSaved by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -59,6 +63,36 @@ fun SettingsScreen(onBack: () -> Unit) {
                 Text("保存")
             }
             if (saved) {
+                Text(
+                    "已保存 ✅",
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            Spacer(Modifier.height(24.dp))
+            Text(
+                "孩子称呼",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "鼓励语和奖励页会带上这个称呼，默认「宝贝」。",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            OutlinedTextField(
+                value = childName,
+                onValueChange = { childName = it; nameSaved = false },
+                label = { Text("孩子称呼") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+            )
+            Button(
+                onClick = { rewardStore.setChildName(childName); nameSaved = true },
+                modifier = Modifier.padding(top = 12.dp)
+            ) {
+                Text("保存称呼")
+            }
+            if (nameSaved) {
                 Text(
                     "已保存 ✅",
                     color = MaterialTheme.colorScheme.tertiary,
